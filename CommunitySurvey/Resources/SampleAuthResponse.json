@@ -1,0 +1,10 @@
+{
+  "accessToken": "sample.jwt.access",
+  "refreshToken": "sample.jwt.refresh",
+  "expiresIn": 3600,
+  "user": {
+    "id": "user_001",
+    "mobileNumber": "9876543210",
+    "countryCode": "+91"
+  }
+}

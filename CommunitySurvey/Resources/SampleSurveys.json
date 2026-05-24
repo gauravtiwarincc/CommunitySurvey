@@ -1,0 +1,22 @@
+[
+  {
+    "id": "survey-001",
+    "title": "Urban Mobility Opinion",
+    "category": "Public Policy",
+    "reward": 25,
+    "estimatedMinutes": 4,
+    "progress": 0,
+    "questions": [
+      {
+        "id": "q1",
+        "text": "What should your city improve first?",
+        "options": [
+          { "id": "a", "title": "Public transport" },
+          { "id": "b", "title": "Road quality" },
+          { "id": "c", "title": "Pedestrian safety" },
+          { "id": "d", "title": "Parking management" }
+        ]
+      }
+    ]
+  }
+]
