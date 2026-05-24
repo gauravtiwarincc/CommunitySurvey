@@ -17,6 +17,7 @@ final class OTPVerificationViewModel {
     private let validationManager: ValidationManager
     private let authService: AuthServiceProtocol
     private let appState: AppState
+    private let surveyStore: SurveyStateStore?
     private let router: AppRouter
     private var timerTask: Task<Void, Never>?
 
@@ -28,6 +29,7 @@ final class OTPVerificationViewModel {
         validationManager: ValidationManager,
         authService: AuthServiceProtocol,
         appState: AppState,
+        surveyStore: SurveyStateStore? = nil,
         router: AppRouter
     ) {
         self.mobileNumber = mobileNumber
@@ -37,6 +39,7 @@ final class OTPVerificationViewModel {
         self.validationManager = validationManager
         self.authService = authService
         self.appState = appState
+        self.surveyStore = surveyStore
         self.router = router
         startResendTimer()
     }
@@ -72,6 +75,7 @@ final class OTPVerificationViewModel {
             do {
                 let session = try await authService.verifyOTP(transactionID: transactionID, otp: normalizedOTP, mobileNumber: mobileNumber, countryCode: countryCode)
                 appState.completeLogin(session: session)
+                surveyStore?.reset()
                 state = .success(session)
                 router.replaceStack(with: .dashboard)
             } catch {

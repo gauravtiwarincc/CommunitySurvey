@@ -26,7 +26,7 @@ struct SurveyQuestionView: View {
     private var progressHeader: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Question \(viewModel.currentIndex + 1) of \(viewModel.survey.questions.count)")
+                Text("Question \(viewModel.currentIndex + 1) of \(viewModel.questions.count)")
                     .font(.headline)
                 Spacer()
                 Label("\(viewModel.secondsRemaining)s", systemImage: "timer")

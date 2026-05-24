@@ -4,7 +4,7 @@ import Observation
 enum AppRoute: Hashable {
     case registration
     case login
-    case otp(mobileNumber: String, countryCode: String)
+    case otp(mobileNumber: String, countryCode: String, transactionID: String?, debugOTP: String?)
     case aadhaar
     case verificationStatus(AadhaarVerificationResult)
     case dashboard

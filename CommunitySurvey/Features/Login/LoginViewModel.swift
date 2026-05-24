@@ -33,7 +33,7 @@ final class LoginViewModel {
             do {
                 let response = try await authService.requestOTP(mobileNumber: normalizedMobile, countryCode: selectedCountryCode)
                 state = .success(response)
-                router.navigate(to: .otp(mobileNumber: normalizedMobile, countryCode: selectedCountryCode))
+                router.navigate(to: .otp(mobileNumber: normalizedMobile, countryCode: selectedCountryCode, transactionID: response.transactionID, debugOTP: response.otp))
             } catch {
                 let appError = error as? AppError ?? .unknown(error.localizedDescription)
                 state = .failure(appError)

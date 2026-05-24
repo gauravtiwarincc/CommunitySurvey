@@ -23,6 +23,10 @@ struct OTPVerificationView: View {
             }
             OTPInputView(digits: $viewModel.digits, onDigitChanged: viewModel.updateDigit, onAutoFill: viewModel.applyAutoFill)
                 .frame(maxWidth: .infinity, alignment: .center)
+            if let debugOTP = viewModel.debugOTP {
+                developmentOTPBanner(debugOTP)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
             if let errorMessage = viewModel.errorMessage {
                 ErrorBanner(message: errorMessage)
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -46,6 +50,37 @@ struct OTPVerificationView: View {
         .navigationTitle("OTP")
         .loadingOverlay(viewModel.state.isLoading, message: "Verifying OTP")
         .animation(.spring(response: 0.32, dampingFraction: 0.84), value: viewModel.errorMessage)
+    }
+
+    private func developmentOTPBanner(_ otp: String) -> some View {
+        Button {
+            viewModel.fillDebugOTP()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "number.square.fill")
+                    .foregroundStyle(AppTheme.deepSaffron)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Development OTP")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text(otp)
+                        .font(.title3.weight(.bold).monospacedDigit())
+                        .foregroundStyle(.primary)
+                }
+                Spacer()
+                Text("Tap to fill")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(AppTheme.indiaGreen)
+            }
+            .padding(12)
+            .background(AppTheme.saffron.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(AppTheme.saffron.opacity(0.24), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Development OTP is \(otp). Tap to fill OTP fields.")
     }
 }
 

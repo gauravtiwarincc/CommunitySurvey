@@ -24,6 +24,10 @@ final class RegistrationViewModel {
         !form.fullName.isEmpty && !form.fathersName.isEmpty && !form.gender.isEmpty && !form.address.isEmpty && !form.state.isEmpty && !form.district.isEmpty && form.hasConsented
     }
 
+    func openLogin() {
+        router.navigate(to: .login)
+    }
+
     func sendAadhaarOTP() async {
         errorMessage = nil
         guard case .success = validationManager.validateAadhaar(form.aadhaarNumber) else {
@@ -50,8 +54,8 @@ final class RegistrationViewModel {
                 return
             }
             do {
-                _ = try await authService.requestOTP(mobileNumber: mobile, countryCode: "+91")
-                router.navigate(to: .otp(mobileNumber: mobile, countryCode: "+91"))
+                let response = try await authService.requestOTP(mobileNumber: mobile, countryCode: "+91")
+                router.navigate(to: .otp(mobileNumber: mobile, countryCode: "+91", transactionID: response.transactionID, debugOTP: response.otp))
             } catch {
                 errorMessage = (error as? AppError ?? .unknown(error.localizedDescription)).localizedDescription
             }

@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 protocol TokenStoreProtocol: Sendable {
     func save(session: AuthSession)

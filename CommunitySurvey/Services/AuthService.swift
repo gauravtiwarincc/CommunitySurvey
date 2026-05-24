@@ -78,15 +78,16 @@ struct AuthService: AuthServiceProtocol {
 
     func requestOTP(mobileNumber: String, countryCode: String) async throws -> OTPResponse {
         let response: OTPLoginResponse = try await apiClient.request(
-            path: "/auth/login",
+            path: "/auth/send-otp",
             method: .post,
             body: LoginUserRequest(mobile: mobileNumber),
             requiresAuthentication: false,
             responseType: OTPLoginResponse.self
         )
         return OTPResponse(
-            transactionID: response.transactionId ?? UUID().uuidString,
-            expiresIn: response.expiresIn ?? 60
+            transactionID: UUID().uuidString,
+            expiresIn: 60,
+            otp: response.otp
         )
     }
 
@@ -94,7 +95,7 @@ struct AuthService: AuthServiceProtocol {
         let response: VerifyOTPResponse = try await apiClient.request(
             path: "/auth/verify-otp",
             method: .post,
-            body: VerifyOTPRequest(mobile: mobileNumber, otp: otp, transactionId: transactionID),
+            body: VerifyOTPRequest(mobile: mobileNumber, otp: otp),
             requiresAuthentication: false,
             responseType: VerifyOTPResponse.self
         )
@@ -103,7 +104,7 @@ struct AuthService: AuthServiceProtocol {
             accessToken: response.token,
             refreshToken: "",
             expiresAt: Date().addingTimeInterval(3600),
-            user: AuthenticatedUser(id: response.user.id, mobileNumber: response.user.mobile, countryCode: countryCode)
+            user: AuthenticatedUser(id: response.user.id, mobileNumber: response.user.mobile ?? mobileNumber, countryCode: countryCode)
         )
     }
 
@@ -133,7 +134,7 @@ struct MockAuthService: AuthServiceProtocol {
     func isAuthenticated() -> Bool { false }
 
     func requestOTP(mobileNumber: String, countryCode: String) async throws -> OTPResponse {
-        OTPResponse(transactionID: UUID().uuidString, expiresIn: 60)
+        OTPResponse(transactionID: UUID().uuidString, expiresIn: 60, otp: "123456")
     }
 
     func verifyOTP(transactionID: String, otp: String, mobileNumber: String, countryCode: String) async throws -> AuthSession {

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2667A54C2FB9BF0B003CC57A /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 2667A54B2FB9BF0B003CC57A /* README.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		2667A5142FB9BE02003CC57A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,11 +31,25 @@
 		2667A5062FB9BDFF003CC57A /* CommunitySurvey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CommunitySurvey.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2667A5132FB9BE02003CC57A /* CommunitySurveyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CommunitySurveyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2667A51D2FB9BE02003CC57A /* CommunitySurveyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CommunitySurveyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2667A54B2FB9BF0B003CC57A /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		26B5E5362FBC27440013FE2F /* Exceptions for "CommunitySurvey" folder in "CommunitySurvey" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2667A5052FB9BDFF003CC57A /* CommunitySurvey */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2667A5082FB9BDFF003CC57A /* CommunitySurvey */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				26B5E5362FBC27440013FE2F /* Exceptions for "CommunitySurvey" folder in "CommunitySurvey" target */,
+			);
 			path = CommunitySurvey;
 			sourceTree = "<group>";
 		};
@@ -79,6 +97,7 @@
 				2667A5162FB9BE02003CC57A /* CommunitySurveyTests */,
 				2667A5202FB9BE02003CC57A /* CommunitySurveyUITests */,
 				2667A5072FB9BDFF003CC57A /* Products */,
+				2667A54B2FB9BF0B003CC57A /* README.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -212,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2667A54C2FB9BF0B003CC57A /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,6 +420,7 @@
 				DEVELOPMENT_TEAM = G44DM7BYX8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CommunitySurvey/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -432,6 +453,7 @@
 				DEVELOPMENT_TEAM = G44DM7BYX8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CommunitySurvey/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -15,6 +15,11 @@ struct RegistrationView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 header
+                Button("Already registered? Login with OTP") {
+                    viewModel.openLogin()
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppTheme.indiaGreen)
                 PremiumCard {
                     VStack(spacing: 14) {
                         FloatingTextField(title: "Full Name", text: $viewModel.form.fullName)

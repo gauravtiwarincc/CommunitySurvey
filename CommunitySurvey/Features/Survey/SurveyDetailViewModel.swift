@@ -73,6 +73,7 @@ final class SurveyDetailViewModel {
             let answers = selectedAnswers.map { SurveySubmissionAnswer(questionId: $0.key, selectedOption: $0.value) }
             let response = try await repository.submitSurvey(surveyID: surveyID, answers: answers)
             surveyStore.markCompleted(surveyID: surveyID, rewardEarned: response.rewardEarned)
+            await surveyStore.refresh()
             completionState = .completed(response.message)
         } catch {
             completionState = .editing

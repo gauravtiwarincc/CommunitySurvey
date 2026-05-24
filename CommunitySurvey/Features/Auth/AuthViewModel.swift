@@ -91,10 +91,14 @@ final class AuthViewModel {
     func login() async {
         errorMessage = nil
         successMessage = nil
+        guard canLogin else {
+            errorMessage = "Enter a valid 10-digit mobile number."
+            return
+        }
         isLoading = true
         do {
-            currentUser = try await authService.login(mobile: mobileDigits)
-            router.replaceStack(with: .surveyList)
+            let response = try await authService.requestOTP(mobileNumber: mobileDigits, countryCode: "+91")
+            router.navigate(to: .otp(mobileNumber: mobileDigits, countryCode: "+91", transactionID: response.transactionID, debugOTP: response.otp))
         } catch {
             errorMessage = userFacingMessage(for: error)
         }

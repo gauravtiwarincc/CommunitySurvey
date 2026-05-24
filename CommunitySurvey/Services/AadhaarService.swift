@@ -15,7 +15,7 @@ struct AadhaarService: AadhaarServiceProtocol {
 
     func verify(aadhaarNumber: String) async throws -> AadhaarVerificationResult {
         let request = AadhaarVerificationRequest(aadhaarNumber: aadhaarNumber)
-        return try await apiClient.send(APIEndpoint.verifyAadhaar(request), responseType: AadhaarVerificationResult.self)
+        return try await apiClient.request(path: "/aadhaar/verify", method: .post, body: request, requiresAuthentication: true, responseType: AadhaarVerificationResult.self)
     }
 }
 

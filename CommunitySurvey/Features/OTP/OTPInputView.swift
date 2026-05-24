@@ -52,9 +52,9 @@ struct OTPInputView: View {
     }
 
     private func updateDigits(with value: String) {
+        let characters = Array(value).map(String.init)
         for index in 0..<6 {
-            let digit = value.index(value.startIndex, offsetBy: index, limitedBy: value.index(before: value.endIndex)).map { String(value[$0]) } ?? ""
-            onDigitChanged(digit, index)
+            onDigitChanged(index < characters.count ? characters[index] : "", index)
         }
     }
 

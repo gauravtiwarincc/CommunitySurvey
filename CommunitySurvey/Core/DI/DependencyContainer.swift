@@ -16,6 +16,7 @@ struct DependencyContainer {
     let walletService: WalletServiceProtocol
     let aadhaarService: AadhaarServiceProtocol
     let surveyRepository: SurveyRepositoryProtocol
+    let surveyStateStore: SurveyStateStore
     let appState: AppState
     let router: AppRouter
 
@@ -34,7 +35,8 @@ struct DependencyContainer {
         let surveyService = SurveyAPIService(apiClient: apiClient)
         let walletService = WalletService(apiClient: apiClient)
         let aadhaarService = MockAadhaarService()
-        let surveyRepository = MockSurveyRepository()
+        let surveyRepository = SurveyRepository(surveyService: surveyService)
+        let surveyStateStore = SurveyStateStore(repository: surveyRepository)
         let appState = AppState(tokenStore: tokenStore, environment: environment)
         let router = AppRouter()
 
@@ -53,6 +55,7 @@ struct DependencyContainer {
             walletService: walletService,
             aadhaarService: aadhaarService,
             surveyRepository: surveyRepository,
+            surveyStateStore: surveyStateStore,
             appState: appState,
             router: router
         )

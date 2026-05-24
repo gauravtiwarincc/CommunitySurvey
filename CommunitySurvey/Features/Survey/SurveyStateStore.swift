@@ -27,6 +27,13 @@ final class SurveyStateStore {
         await refresh()
     }
 
+    func reset() {
+        dashboard = nil
+        errorMessage = nil
+        isLoading = false
+        hasLoaded = false
+    }
+
     func refresh() async {
         guard !isLoading else { return }
         isLoading = true

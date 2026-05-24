@@ -25,6 +25,7 @@ struct OTPRequest: Codable, Equatable, Sendable {
 struct OTPResponse: Codable, Equatable, Sendable {
     let transactionID: String
     let expiresIn: Int
+    let otp: String?
 }
 
 struct OTPVerificationRequest: Codable, Equatable, Sendable {
