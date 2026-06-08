@@ -1,7 +1,7 @@
 import Foundation
 
 protocol AuthServiceProtocol: Sendable {
-    func register(fullName: String, mobile: String, aadhaar: String) async throws -> User
+    func register(fullName: String, mobile: String, aadhaar: String, role: UserRole, organizationId: String?, organizationType: String?, state: String?, district: String?, city: String?) async throws -> AuthSession
     func login(mobile: String) async throws -> User
     func getProfile() async throws -> User
     func updateProfile(fullName: String?) async throws -> User
@@ -23,15 +23,16 @@ struct AuthService: AuthServiceProtocol {
         self.keychainService = keychainService
     }
 
-    func register(fullName: String, mobile: String, aadhaar: String) async throws -> User {
+    func register(fullName: String, mobile: String, aadhaar: String, role: UserRole, organizationId: String?, organizationType: String?, state: String?, district: String?, city: String?) async throws -> AuthSession {
         let response: RegisterUserResponse = try await apiClient.request(
             path: "/auth/register",
             method: .post,
-            body: RegisterUserRequest(fullName: fullName, mobile: mobile, aadhaar: aadhaar),
+            body: RegisterUserRequest(fullName: fullName, mobile: mobile, aadhaar: aadhaar, role: role, organizationId: organizationId, organizationType: organizationType, state: state, district: district, city: city),
             requiresAuthentication: false,
             responseType: RegisterUserResponse.self
         )
-        return response.user
+        try keychainService.save(token: response.token)
+        return makeSession(token: response.token, user: response.user, mobileNumber: mobile, countryCode: "+91")
     }
 
     func login(mobile: String) async throws -> User {
@@ -84,11 +85,7 @@ struct AuthService: AuthServiceProtocol {
             requiresAuthentication: false,
             responseType: OTPLoginResponse.self
         )
-        return OTPResponse(
-            transactionID: UUID().uuidString,
-            expiresIn: 60,
-            otp: response.otp
-        )
+        return OTPResponse(transactionID: UUID().uuidString, expiresIn: 60, otp: response.otp)
     }
 
     func verifyOTP(transactionID: String, otp: String, mobileNumber: String, countryCode: String) async throws -> AuthSession {
@@ -100,47 +97,25 @@ struct AuthService: AuthServiceProtocol {
             responseType: VerifyOTPResponse.self
         )
         try keychainService.save(token: response.token)
-        return AuthSession(
-            accessToken: response.token,
-            refreshToken: "",
-            expiresAt: Date().addingTimeInterval(3600),
-            user: AuthenticatedUser(id: response.user.id, mobileNumber: response.user.mobile ?? mobileNumber, countryCode: countryCode)
-        )
+        return makeSession(token: response.token, user: response.user, mobileNumber: mobileNumber, countryCode: countryCode)
     }
 
     func refresh(session: AuthSession) async throws -> AuthSession { session }
+
+    private func makeSession(token: String, user: User, mobileNumber: String, countryCode: String) -> AuthSession {
+        AuthSession(
+            accessToken: token,
+            refreshToken: "",
+            expiresAt: Date().addingTimeInterval(3600),
+            user: AuthenticatedUser(
+                id: user.id,
+                mobileNumber: user.mobile ?? mobileNumber,
+                countryCode: countryCode,
+                role: user.role,
+                organization: user.organization
+            )
+        )
+    }
 }
 
 struct EmptyRequest: Encodable, Sendable { }
-
-struct MockAuthService: AuthServiceProtocol {
-    func register(fullName: String, mobile: String, aadhaar: String) async throws -> User {
-        User(id: UUID().uuidString, fullName: fullName, mobile: mobile, aadhaar: aadhaar)
-    }
-
-    func login(mobile: String) async throws -> User {
-        User(id: UUID().uuidString, fullName: "Verified Citizen", mobile: mobile, aadhaar: "XXXX XXXX 0019")
-    }
-
-    func getProfile() async throws -> User {
-        User(id: "mock-user", fullName: "Verified Citizen", mobile: "9876543210", aadhaar: "XXXX XXXX 0019")
-    }
-
-    func updateProfile(fullName: String?) async throws -> User {
-        User(id: "mock-user", fullName: fullName ?? "Verified Citizen", mobile: "9876543210", aadhaar: "XXXX XXXX 0019")
-    }
-
-    func logout() async { }
-    func isAuthenticated() -> Bool { false }
-
-    func requestOTP(mobileNumber: String, countryCode: String) async throws -> OTPResponse {
-        OTPResponse(transactionID: UUID().uuidString, expiresIn: 60, otp: "123456")
-    }
-
-    func verifyOTP(transactionID: String, otp: String, mobileNumber: String, countryCode: String) async throws -> AuthSession {
-        guard otp == "123456" else { throw APIError.unauthorized }
-        return AuthSession(accessToken: "mock", refreshToken: "mock", expiresAt: Date().addingTimeInterval(3600), user: AuthenticatedUser(id: "mock-user", mobileNumber: mobileNumber, countryCode: countryCode))
-    }
-
-    func refresh(session: AuthSession) async throws -> AuthSession { session }
-}

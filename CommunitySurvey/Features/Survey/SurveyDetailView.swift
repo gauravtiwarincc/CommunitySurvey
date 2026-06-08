@@ -101,7 +101,7 @@ struct SurveyDetailView: View {
                 ForEach(question.options) { option in
                     RadioOptionRow(
                         title: option.title,
-                        isSelected: viewModel.selectedAnswers[question.id] == option.title
+                        isSelected: viewModel.selectedAnswers[question.id] == option.id
                     ) {
                         viewModel.select(option: option, for: question)
                     }

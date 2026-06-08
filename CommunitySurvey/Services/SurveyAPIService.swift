@@ -17,7 +17,7 @@ struct SurveyAPIService: SurveyServiceProtocol {
 
     func getDashboardSurveys() async throws -> DashboardSurveyResponse {
         try await apiClient.request(
-            path: "/surveys",
+            path: "/dashboard",
             method: .get,
             body: Optional<EmptyRequest>.none,
             requiresAuthentication: true,
@@ -26,18 +26,25 @@ struct SurveyAPIService: SurveyServiceProtocol {
     }
 
     func getSurveys() async throws -> [Survey] {
-        try await getDashboardSurveys().allSurveys
-    }
-
-    func getSurveyDetails(id: String) async throws -> SurveyDetail {
-        let response: SurveyDetailResponse = try await apiClient.request(
-            path: "/surveys/\(id)",
+        let response: SurveyListResponse = try await apiClient.request(
+            path: "/surveys",
             method: .get,
             body: Optional<EmptyRequest>.none,
             requiresAuthentication: true,
-            responseType: SurveyDetailResponse.self
+            responseType: SurveyListResponse.self
         )
-        return response.survey
+        return response.surveys.map { survey in
+            var copy = survey
+            copy.isCompleted = false
+            return copy
+        }
+    }
+
+    func getSurveyDetails(id: String) async throws -> SurveyDetail {
+        guard let survey = try await getSurveys().first(where: { $0.id == id }) else {
+            throw APIError.serverError("Survey is not available or has already been completed.")
+        }
+        return SurveyDetail(survey: survey)
     }
 
     func submitSurvey(surveyId: String, answers: [SurveySubmissionAnswer]) async throws -> SurveySubmitResponse {

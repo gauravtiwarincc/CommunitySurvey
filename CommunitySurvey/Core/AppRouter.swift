@@ -14,6 +14,10 @@ enum AppRoute: Hashable {
     case surveyList
     case surveyDetail(id: String)
     case wallet
+    case adminUsers
+    case adminUserDetail(id: String)
+    case adminSurveyManagement
+    case createSurvey
 }
 
 @MainActor

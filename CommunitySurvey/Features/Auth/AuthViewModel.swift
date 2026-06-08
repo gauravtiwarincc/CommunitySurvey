@@ -3,17 +3,13 @@ import Observation
 
 enum RegistrationField: Hashable {
     case fullName
-    case fathersName
-    case gender
     case mobile
     case aadhaar
-    case address
+    case role
+    case organizationType
     case state
     case district
-    case pincode
-    case education
-    case occupation
-    case socialCategory
+    case city
     case consent
 }
 
@@ -27,12 +23,35 @@ final class AuthViewModel {
     var mobile = ""
     var aadhaar = ""
     var address = ""
-    var state = ""
-    var district = ""
+    var state = "" {
+        didSet {
+            guard oldValue != state else { return }
+            district = ""
+            city = ""
+            districts = []
+            cities = []
+        }
+    }
+    var district = "" {
+        didSet {
+            guard oldValue != district else { return }
+            city = ""
+            cities = []
+        }
+    }
+    var city = ""
     var pincode = ""
     var education = ""
     var occupation = ""
     var socialCategory = ""
+    var selectedRole: UserRole = .user
+    var organizationTypes: [String] = []
+    var selectedOrganizationType = ""
+    var organizations: [OrganizationSummary] = []
+    var selectedOrganizationID = ""
+    var states: [String] = []
+    var districts: [String] = []
+    var cities: [String] = []
     var hasAadhaarConsent = false
     var hasPrivacyConsent = false
     var hasTermsConsent = false
@@ -40,33 +59,120 @@ final class AuthViewModel {
     var hasAttemptedSubmit = false
     var currentUser: User?
     var isLoading = false
+    var isLoadingOrganizations = false
+    var isLoadingLocations = false
     var isVerifyingAadhaar = false
     var errorMessage: String?
     var successMessage: String?
 
     private let authService: AuthServiceProtocol
+    private let organizationService: OrganizationServiceProtocol
+    private let locationService: LocationServiceProtocol
+    private let sessionManager: SessionManager
+    private let themeManager: ThemeManager
+    private let surveyStore: SurveyStateStore
     private let router: AppRouter
 
-    init(authService: AuthServiceProtocol, router: AppRouter) {
+    init(
+        authService: AuthServiceProtocol,
+        organizationService: OrganizationServiceProtocol,
+        locationService: LocationServiceProtocol,
+        sessionManager: SessionManager,
+        themeManager: ThemeManager,
+        surveyStore: SurveyStateStore,
+        router: AppRouter
+    ) {
         self.authService = authService
+        self.organizationService = organizationService
+        self.locationService = locationService
+        self.sessionManager = sessionManager
+        self.themeManager = themeManager
+        self.surveyStore = surveyStore
         self.router = router
     }
 
     var isAuthenticated: Bool { authService.isAuthenticated() }
     var canLogin: Bool { mobileDigits.count == 10 && !isLoading }
     var canRegister: Bool { validationErrors().isEmpty && !isLoading }
+    var isAdminRegistration: Bool { selectedRole == .admin }
+    var selectableRoles: [UserRole] { [.user, .admin] }
+    var roleNames: [String] { selectableRoles.map(\.rawValue) }
+    var selectedRoleName: String {
+        get { selectedRole.rawValue }
+        set { selectedRole = UserRole(rawValue: newValue) ?? .user }
+    }
+    var organizationNames: [String] { organizations.map(\.organizationName) }
+    var selectedOrganizationName: String {
+        get { organizations.first(where: { $0.id == selectedOrganizationID })?.organizationName ?? "" }
+        set { selectedOrganizationID = organizations.first(where: { $0.organizationName == newValue })?.id ?? "" }
+    }
 
     private var mobileDigits: String { mobile.filter(\.isNumber) }
     private var aadhaarDigits: String { aadhaar.filter(\.isNumber) }
-    private var pincodeDigits: String { pincode.filter(\.isNumber) }
 
-    func openRegister() {
-        router.navigate(to: .registration)
+    func loadInitialRegistrationData() async {
+        async let types: Void = loadOrganizationTypes()
+        async let states: Void = loadStates()
+        _ = await (types, states)
     }
 
-    func openLogin() {
-        router.resetToRoot()
+    func loadOrganizationTypes() async {
+        guard organizationTypes.isEmpty else { return }
+        isLoadingOrganizations = true
+        defer { isLoadingOrganizations = false }
+        do {
+            organizationTypes = try await organizationService.fetchOrganizationTypes()
+        } catch {
+            errorMessage = userFacingMessage(for: error)
+        }
     }
+
+    func loadOrganizationsForSelectedType() async {
+        guard !selectedOrganizationType.isEmpty else { return }
+        isLoadingOrganizations = true
+        defer { isLoadingOrganizations = false }
+        do {
+            organizations = try await organizationService.fetchOrganizations(type: selectedOrganizationType)
+        } catch {
+            errorMessage = userFacingMessage(for: error)
+        }
+    }
+
+    func loadStates() async {
+        guard states.isEmpty else { return }
+        isLoadingLocations = true
+        defer { isLoadingLocations = false }
+        do {
+            states = try await locationService.fetchStates()
+        } catch {
+            errorMessage = userFacingMessage(for: error)
+        }
+    }
+
+    func loadDistrictsForSelectedState() async {
+        guard !state.isEmpty else { return }
+        isLoadingLocations = true
+        defer { isLoadingLocations = false }
+        do {
+            districts = try await locationService.fetchDistricts(state: state)
+        } catch {
+            errorMessage = userFacingMessage(for: error)
+        }
+    }
+
+    func loadCitiesForSelectedDistrict() async {
+        guard !district.isEmpty else { return }
+        isLoadingLocations = true
+        defer { isLoadingLocations = false }
+        do {
+            cities = try await locationService.fetchCities(district: district)
+        } catch {
+            errorMessage = userFacingMessage(for: error)
+        }
+    }
+
+    func openRegister() { router.navigate(to: .registration) }
+    func openLogin() { router.resetToRoot() }
 
     func inlineError(for field: RegistrationField) -> String? {
         guard hasAttemptedSubmit else { return nil }
@@ -114,9 +220,21 @@ final class AuthViewModel {
 
         isLoading = true
         do {
-            _ = try await authService.register(fullName: fullName.trimmingCharacters(in: .whitespacesAndNewlines), mobile: mobileDigits, aadhaar: aadhaarDigits)
-            successMessage = "Registration successful. Please login with your mobile number."
-            try? await Task.sleep(for: .milliseconds(800))
+            let session = try await authService.register(
+                fullName: fullName.trimmingCharacters(in: .whitespacesAndNewlines),
+                mobile: mobileDigits,
+                aadhaar: aadhaarDigits,
+                role: selectedRole,
+                organizationId: selectedOrganizationID.isEmpty ? nil : selectedOrganizationID,
+                organizationType: isAdminRegistration ? selectedOrganizationType : nil,
+                state: isAdminRegistration ? state : nil,
+                district: isAdminRegistration ? district : nil,
+                city: isAdminRegistration ? city : nil
+            )
+            sessionManager.completeLogin(session: session)
+            themeManager.apply(organization: session.user.organization)
+            surveyStore.reset()
+            await surveyStore.refresh()
             router.resetToRoot()
         } catch {
             errorMessage = userFacingMessage(for: error)
@@ -124,8 +242,10 @@ final class AuthViewModel {
         isLoading = false
     }
 
-    func logout() async {
-        await authService.logout()
+    func logout() {
+        sessionManager.logout()
+        surveyStore.reset()
+        themeManager.reset()
         currentUser = nil
         router.resetToRoot()
     }
@@ -133,18 +253,15 @@ final class AuthViewModel {
     private func validationErrors() -> [RegistrationField: String] {
         var errors: [RegistrationField: String] = [:]
         if fullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { errors[.fullName] = "Full name is required." }
-        if fathersName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { errors[.fathersName] = "Father's name is required." }
-        if gender.isEmpty { errors[.gender] = "Select gender." }
         if mobileDigits.count != 10 { errors[.mobile] = "Mobile number must be 10 digits." }
         if aadhaarDigits.count != 12 { errors[.aadhaar] = "Aadhaar number must be 12 digits." }
-        if address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { errors[.address] = "Full address is required." }
-        if state.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { errors[.state] = "State is required." }
-        if district.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { errors[.district] = "District is required." }
-        if pincodeDigits.count != 6 { errors[.pincode] = "Pincode must be 6 digits." }
-        if education.isEmpty { errors[.education] = "Select education." }
-        if occupation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { errors[.occupation] = "Occupation is required." }
-        if socialCategory.isEmpty { errors[.socialCategory] = "Select social category." }
         if !hasAadhaarConsent || !hasPrivacyConsent || !hasTermsConsent { errors[.consent] = "All consent items are required." }
+        if isAdminRegistration {
+            if selectedOrganizationType.isEmpty { errors[.organizationType] = "Select organization type." }
+            if state.isEmpty { errors[.state] = "Select state." }
+            if district.isEmpty { errors[.district] = "Select district." }
+            if city.isEmpty { errors[.city] = "Select city." }
+        }
         return errors
     }
 

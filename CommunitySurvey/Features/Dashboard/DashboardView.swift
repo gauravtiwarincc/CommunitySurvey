@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DashboardView: View {
+    @Environment(\.themeManager) private var themeManager
     @State private var viewModel: DashboardViewModel
     let router: AppRouter
 
@@ -56,11 +57,11 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Verified Opinion Network")
+                        Text(themeManager.organizationName)
                             .font(.title2.bold())
                             .foregroundStyle(.white)
                             .fixedSize(horizontal: false, vertical: true)
-                        Text("Earn rewards for verified civic opinion surveys.")
+                        Text(themeManager.welcomeMessage)
                             .font(.subheadline)
                             .foregroundStyle(.white.opacity(0.82))
                     }
@@ -72,7 +73,7 @@ struct DashboardView: View {
                 }
 
                 HStack(spacing: 10) {
-                    Label("Aadhaar verified", systemImage: "checkmark.seal.fill")
+                    Label("\(viewModel.stats.rewardPoints) pts", systemImage: "gift.fill")
                         .font(.caption.bold())
                         .padding(.horizontal, 10)
                         .padding(.vertical, 8)

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SurveyListView: View {
+    @Environment(\.themeManager) private var themeManager
     @State private var viewModel: SurveyListViewModel
     let router: AppRouter
 
@@ -54,7 +55,7 @@ struct SurveyListView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Verified Opinion Network")
+                        Text(themeManager.organizationName)
                             .font(.title2.bold())
                             .foregroundStyle(.white)
                         Text("Answer verified surveys and earn reward points.")

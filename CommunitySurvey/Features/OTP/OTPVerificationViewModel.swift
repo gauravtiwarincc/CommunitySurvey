@@ -16,7 +16,8 @@ final class OTPVerificationViewModel {
     private var transactionID: String
     private let validationManager: ValidationManager
     private let authService: AuthServiceProtocol
-    private let appState: AppState
+    private let sessionManager: SessionManager
+    private let themeManager: ThemeManager?
     private let surveyStore: SurveyStateStore?
     private let router: AppRouter
     private var timerTask: Task<Void, Never>?
@@ -28,7 +29,8 @@ final class OTPVerificationViewModel {
         debugOTP: String? = nil,
         validationManager: ValidationManager,
         authService: AuthServiceProtocol,
-        appState: AppState,
+        sessionManager: SessionManager,
+        themeManager: ThemeManager? = nil,
         surveyStore: SurveyStateStore? = nil,
         router: AppRouter
     ) {
@@ -38,7 +40,8 @@ final class OTPVerificationViewModel {
         self.debugOTP = debugOTP
         self.validationManager = validationManager
         self.authService = authService
-        self.appState = appState
+        self.sessionManager = sessionManager
+        self.themeManager = themeManager
         self.surveyStore = surveyStore
         self.router = router
         startResendTimer()
@@ -74,10 +77,12 @@ final class OTPVerificationViewModel {
             state = .loading
             do {
                 let session = try await authService.verifyOTP(transactionID: transactionID, otp: normalizedOTP, mobileNumber: mobileNumber, countryCode: countryCode)
-                appState.completeLogin(session: session)
+                sessionManager.completeLogin(session: session)
+                themeManager?.apply(organization: session.user.organization)
                 surveyStore?.reset()
+                await surveyStore?.refresh()
                 state = .success(session)
-                router.replaceStack(with: .dashboard)
+                router.resetToRoot()
             } catch {
                 let appError = error as? AppError ?? .unknown(error.localizedDescription)
                 state = .failure(appError)

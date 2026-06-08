@@ -87,6 +87,6 @@ struct OTPVerificationView: View {
 #Preview {
     NavigationStack {
         let container = DependencyContainer.live()
-        OTPVerificationView(viewModel: OTPVerificationViewModel(mobileNumber: "9876543210", countryCode: "+91", validationManager: container.validationManager, authService: container.authService, appState: container.appState, router: container.router))
+        OTPVerificationView(viewModel: OTPVerificationViewModel(mobileNumber: "9876543210", countryCode: "+91", validationManager: container.validationManager, authService: container.authService, sessionManager: container.sessionManager, router: container.router))
     }
 }

@@ -11,8 +11,14 @@ struct RequestBuilder: Sendable {
     }
 
     func build(endpoint: Endpoint) throws -> URLRequest {
-        var components = URLComponents(url: environment.baseURL.appendingPathComponent(endpoint.path), resolvingAgainstBaseURL: false)
-        components?.queryItems = endpoint.queryItems.isEmpty ? nil : endpoint.queryItems
+        let pathParts = endpoint.path.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false)
+        let path = String(pathParts.first ?? "")
+        var components = URLComponents(url: environment.baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
+        var queryItems = endpoint.queryItems
+        if pathParts.count > 1, let queryComponents = URLComponents(string: "?\(pathParts[1])")?.queryItems {
+            queryItems.append(contentsOf: queryComponents)
+        }
+        components?.queryItems = queryItems.isEmpty ? nil : queryItems
         guard let url = components?.url else {
             throw AppError.network("Invalid API URL.")
         }

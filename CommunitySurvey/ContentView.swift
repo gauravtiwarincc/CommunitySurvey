@@ -15,6 +15,8 @@ struct ContentView: View {
                             showSplash = false
                         }
                     }
+                } else if container.sessionManager.isAuthenticated {
+                    MainTabView(container: container)
                 } else {
                     LoginView(viewModel: makeAuthViewModel())
                 }
@@ -23,17 +25,20 @@ struct ContentView: View {
                 destination(for: route)
             }
         }
-        .tint(AppTheme.indiaGreen)
-        .onAppear {
-            if container.authService.isAuthenticated() {
+        .environment(\.themeManager, container.themeManager)
+        .tint(AppTheme.accent)
+        .task {
+            await container.themeManager.load()
+            container.sessionManager.restore()
+            container.themeManager.apply(organization: container.sessionManager.currentUser?.organization)
+            if container.sessionManager.isAuthenticated {
                 showSplash = false
-                container.router.replaceStack(with: .dashboard)
             }
         }
     }
 
     private func makeAuthViewModel() -> AuthViewModel {
-        AuthViewModel(authService: container.authService, router: container.router)
+        AuthViewModel(authService: container.authService, organizationService: container.organizationService, locationService: container.locationService, sessionManager: container.sessionManager, themeManager: container.themeManager, surveyStore: container.surveyStateStore, router: container.router)
     }
 
     @ViewBuilder
@@ -50,19 +55,61 @@ struct ContentView: View {
         case .wallet:
             WalletView(viewModel: WalletViewModel(walletService: container.walletService))
         case .profile:
-            ProfileView(viewModel: ProfileViewModel(profileService: container.profileService, authService: container.authService, surveyStore: container.surveyStateStore, router: container.router))
+            ProfileView(viewModel: ProfileViewModel(profileService: container.profileService, authService: container.authService, surveyStore: container.surveyStateStore, sessionManager: container.sessionManager, themeManager: container.themeManager, router: container.router))
         case .otp(let mobileNumber, let countryCode, let transactionID, let debugOTP):
-            OTPVerificationView(viewModel: OTPVerificationViewModel(mobileNumber: mobileNumber, countryCode: countryCode, transactionID: transactionID, debugOTP: debugOTP, validationManager: container.validationManager, authService: container.authService, appState: container.appState, surveyStore: container.surveyStateStore, router: container.router))
+            OTPVerificationView(viewModel: OTPVerificationViewModel(mobileNumber: mobileNumber, countryCode: countryCode, transactionID: transactionID, debugOTP: debugOTP, validationManager: container.validationManager, authService: container.authService, sessionManager: container.sessionManager, themeManager: container.themeManager, surveyStore: container.surveyStateStore, router: container.router))
         case .aadhaar:
             AadhaarVerificationView(viewModel: AadhaarViewModel(validationManager: container.validationManager, aadhaarService: container.aadhaarService, router: container.router))
         case .verificationStatus(let result):
-            VerificationStatusView(result: result) { container.router.replaceStack(with: .dashboard) }
+            VerificationStatusView(result: result) { container.router.resetToRoot() }
         case .dashboard:
             DashboardView(viewModel: DashboardViewModel(surveyStore: container.surveyStateStore), router: container.router)
         case .survey(let survey):
             SurveyQuestionView(viewModel: SurveyViewModel(survey: survey, repository: container.surveyRepository, router: container.router))
         case .rewards:
             RewardsView(viewModel: RewardsViewModel(repository: container.surveyRepository))
+        case .adminUsers:
+            adminOnly {
+                AdminUsersView(viewModel: AdminUsersViewModel(adminService: container.adminService), router: container.router)
+            }
+        case .adminUserDetail(let id):
+            adminOnly {
+                AdminUserDetailView(viewModel: AdminUserDetailViewModel(userID: id, adminService: container.adminService))
+            }
+        case .adminSurveyManagement:
+            adminOnly {
+                AdminSurveyListView(router: container.router)
+            }
+        case .createSurvey:
+            adminWriteOnly {
+                CreateSurveyView(viewModel: CreateSurveyViewModel(adminService: container.adminService))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func adminOnly<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        if container.roleManager.canAccessAdmin {
+            content()
+        } else {
+            ErrorStateView(message: "Admin access is required for this screen.") {
+                container.router.resetToRoot()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func adminWriteOnly<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        if container.roleManager.canPerformAdminWrites {
+            content()
+        } else if container.roleManager.canAccessAdmin {
+            ErrorStateView(message: "This action is read-only for platform administrators.") {
+                container.router.resetToRoot()
+            }
+        } else {
+            ErrorStateView(message: "Admin access is required for this screen.") {
+                container.router.resetToRoot()
+            }
         }
     }
 }

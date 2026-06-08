@@ -4,6 +4,8 @@ struct AuthenticatedUser: Codable, Equatable, Hashable, Sendable {
     let id: String
     let mobileNumber: String
     let countryCode: String
+    let role: UserRole
+    let organization: OrganizationSummary?
 }
 
 struct AuthSession: Codable, Equatable, Sendable {

@@ -54,7 +54,7 @@ final class SurveyDetailViewModel {
 
     func select(option: SurveyOption, for question: SurveyQuestion) {
         guard completionState == .editing, !isAlreadyCompleted else { return }
-        selectedAnswers[question.id] = option.title
+        selectedAnswers[question.id] = option.id
     }
 
     func submit() async {
@@ -72,9 +72,9 @@ final class SurveyDetailViewModel {
         do {
             let answers = selectedAnswers.map { SurveySubmissionAnswer(questionId: $0.key, selectedOption: $0.value) }
             let response = try await repository.submitSurvey(surveyID: surveyID, answers: answers)
-            surveyStore.markCompleted(surveyID: surveyID, rewardEarned: response.rewardEarned)
             await surveyStore.refresh()
-            completionState = .completed(response.message)
+            let rewardSuffix = response.rewardEarned > 0 ? " You earned \(response.rewardEarned) reward points." : ""
+            completionState = .completed((response.message ?? "Survey submitted successfully.") + rewardSuffix)
         } catch {
             completionState = .editing
             errorMessage = error.localizedDescription

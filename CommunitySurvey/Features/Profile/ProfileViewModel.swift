@@ -12,12 +12,16 @@ final class ProfileViewModel {
     private let profileService: ProfileServiceProtocol
     private let authService: AuthServiceProtocol
     private let surveyStore: SurveyStateStore
+    private let sessionManager: SessionManager
+    private let themeManager: ThemeManager
     private let router: AppRouter
 
-    init(profileService: ProfileServiceProtocol, authService: AuthServiceProtocol, surveyStore: SurveyStateStore, router: AppRouter) {
+    init(profileService: ProfileServiceProtocol, authService: AuthServiceProtocol, surveyStore: SurveyStateStore, sessionManager: SessionManager, themeManager: ThemeManager, router: AppRouter) {
         self.profileService = profileService
         self.authService = authService
         self.surveyStore = surveyStore
+        self.sessionManager = sessionManager
+        self.themeManager = themeManager
         self.router = router
     }
 
@@ -42,9 +46,10 @@ final class ProfileViewModel {
         isLoading = false
     }
 
-    func logout() async {
-        await authService.logout()
+    func logout() {
+        sessionManager.logout()
         surveyStore.reset()
+        themeManager.reset()
         router.resetToRoot()
     }
 }
