@@ -35,6 +35,19 @@ final class AppState {
         isAuthenticated = true
     }
 
+    func updateUser(user: AuthenticatedUser) {
+        self.user = user
+        if let session = tokenStore.loadSession() {
+            let updatedSession = AuthSession(
+                accessToken: session.accessToken,
+                refreshToken: session.refreshToken,
+                expiresAt: session.expiresAt,
+                user: user
+            )
+            tokenStore.save(session: updatedSession)
+        }
+    }
+
     func logout() {
         tokenStore.clear()
         try? keychainService.deleteToken()

@@ -31,13 +31,13 @@ final class ThemeManager {
     }
 
     var organizationName: String { config.organizationName }
-    var welcomeMessage: String { config.welcomeMessage }
-    var logoURL: URL? { config.logoURL }
+    var welcomeMessage: String { config.welcomeMessage ?? "" }
+    var logoURL: URL? { config.logoUrl.flatMap(URL.init(string:)) }
     var primary: Color { Color(hex: config.primaryColor) }
     var secondary: Color { Color(hex: config.secondaryColor) }
     var accent: Color { Color(hex: config.accentColor) }
-    var gradientStart: Color { Color(hex: config.gradientStartColor) }
-    var gradientEnd: Color { Color(hex: config.gradientEndColor) }
+    var gradientStart: Color { Color(hex: config.primaryColor) }
+    var gradientEnd: Color { Color(hex: config.secondaryColor) }
 
     var brandGradient: LinearGradient {
         LinearGradient(colors: [gradientStart, gradientEnd], startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -60,9 +60,21 @@ final class ThemeManager {
         isLoading = false
     }
 
-    func apply(organization: OrganizationSummary?) {
+    func loadConfig(code: String?, using service: OrganizationServiceProtocol) async throws {
+        isLoading = true
+        defer { isLoading = false }
+        errorMessage = nil
+        do {
+            config = try await service.fetchConfig(code: code)
+        } catch {
+            errorMessage = error.localizedDescription
+            throw error
+        }
+    }
+
+    func apply(organization: OrganizationConfig?) {
         guard let organization else { return }
-        config = OrganizationConfig(organization: organization)
+        config = organization
     }
 
     func reset() {

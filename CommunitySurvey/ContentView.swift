@@ -4,6 +4,8 @@ struct ContentView: View {
     @State private var container = DependencyContainer.live()
     @State private var showSplash = true
 
+    @State private var hasCompletedOnboarding = false
+
     var body: some View {
         @Bindable var router = container.router
 
@@ -17,6 +19,19 @@ struct ContentView: View {
                     }
                 } else if container.sessionManager.isAuthenticated {
                     MainTabView(container: container)
+                } else if !hasCompletedOnboarding {
+                    OrganizationCodeView(
+                        themeManager: container.themeManager,
+                        organizationService: container.organizationService,
+                        onComplete: { hasCode in
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                hasCompletedOnboarding = true
+                            }
+                            if hasCode {
+                                container.router.navigate(to: .registration)
+                            }
+                        }
+                    )
                 } else {
                     LoginView(viewModel: makeAuthViewModel())
                 }
@@ -33,7 +48,39 @@ struct ContentView: View {
             container.themeManager.apply(organization: container.sessionManager.currentUser?.organization)
             if container.sessionManager.isAuthenticated {
                 showSplash = false
+                try? await container.themeManager.loadConfig(code: nil, using: container.organizationService)
             }
+        }
+        .onChange(of: container.sessionManager.isAuthenticated) { _, isAuthenticated in
+            if isAuthenticated {
+                Task {
+                    try? await container.themeManager.loadConfig(code: nil, using: container.organizationService)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("UserSessionExpired"))) { notification in
+            if let message = notification.userInfo?["message"] as? String {
+                container.sessionManager.logout()
+                presentGlobalAlert(title: "Session Expired", message: message)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("UserDeactivatedDuringAuth"))) { notification in
+            if let message = notification.userInfo?["message"] as? String {
+                presentGlobalAlert(title: "Account Deactivated", message: message)
+            }
+        }
+    }
+
+    private func presentGlobalAlert(title: String, message: String) {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = windowScene.windows.first?.rootViewController {
+            var topVC = rootVC
+            while let presented = topVC.presentedViewController {
+                topVC = presented
+            }
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            topVC.present(alert, animated: true)
         }
     }
 
@@ -74,7 +121,7 @@ struct ContentView: View {
             }
         case .adminUserDetail(let id):
             adminOnly {
-                AdminUserDetailView(viewModel: AdminUserDetailViewModel(userID: id, adminService: container.adminService))
+                AdminUserDetailView(viewModel: AdminUserDetailViewModel(userID: id, adminService: container.adminService, sessionManager: container.sessionManager))
             }
         case .adminSurveyManagement:
             adminOnly {
@@ -83,6 +130,10 @@ struct ContentView: View {
         case .createSurvey:
             adminWriteOnly {
                 CreateSurveyView(viewModel: CreateSurveyViewModel(adminService: container.adminService))
+            }
+        case .adminThemeCustomization:
+            adminWriteOnly {
+                AdminThemeCustomizationView(viewModel: AdminThemeCustomizationViewModel(adminService: container.adminService, themeManager: container.themeManager, sessionManager: container.sessionManager))
             }
         }
     }

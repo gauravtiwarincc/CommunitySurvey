@@ -1,9 +1,9 @@
 import Foundation
 
 protocol LocationServiceProtocol: Sendable {
-    func fetchStates() async throws -> [String]
-    func fetchDistricts(state: String) async throws -> [String]
-    func fetchCities(district: String) async throws -> [String]
+    func fetchStates() async throws -> [LocationItem]
+    func fetchDistricts(stateId: String) async throws -> [LocationItem]
+    func fetchCities(districtId: String) async throws -> [LocationItem]
 }
 
 @MainActor
@@ -14,38 +14,38 @@ struct LocationService: LocationServiceProtocol {
         self.apiClient = apiClient
     }
 
-    func fetchStates() async throws -> [String] {
-        let response: LocationListResponse = try await apiClient.request(
+    func fetchStates() async throws -> [LocationItem] {
+        let response: LocationResponse<LocationItem> = try await apiClient.request(
             path: "/location/states",
             method: .get,
             body: Optional<EmptyRequest>.none,
             requiresAuthentication: false,
-            responseType: LocationListResponse.self
+            responseType: LocationResponse<LocationItem>.self
         )
-        return response.values
+        return response.data
     }
 
-    func fetchDistricts(state: String) async throws -> [String] {
-        let encoded = state.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? state
-        let response: LocationListResponse = try await apiClient.request(
-            path: "/location/districts?state=\(encoded)",
+    func fetchDistricts(stateId: String) async throws -> [LocationItem] {
+        let encoded = stateId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? stateId
+        let response: LocationResponse<LocationItem> = try await apiClient.request(
+            path: "/location/districts?stateId=\(encoded)",
             method: .get,
             body: Optional<EmptyRequest>.none,
             requiresAuthentication: false,
-            responseType: LocationListResponse.self
+            responseType: LocationResponse<LocationItem>.self
         )
-        return response.values
+        return response.data
     }
 
-    func fetchCities(district: String) async throws -> [String] {
-        let encoded = district.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? district
-        let response: LocationListResponse = try await apiClient.request(
-            path: "/location/cities?district=\(encoded)",
+    func fetchCities(districtId: String) async throws -> [LocationItem] {
+        let encoded = districtId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? districtId
+        let response: LocationResponse<LocationItem> = try await apiClient.request(
+            path: "/location/cities?districtId=\(encoded)",
             method: .get,
             body: Optional<EmptyRequest>.none,
             requiresAuthentication: false,
-            responseType: LocationListResponse.self
+            responseType: LocationResponse<LocationItem>.self
         )
-        return response.values
+        return response.data
     }
 }

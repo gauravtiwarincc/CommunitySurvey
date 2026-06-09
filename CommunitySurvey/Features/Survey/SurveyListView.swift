@@ -15,8 +15,11 @@ struct SurveyListView: View {
             LazyVStack(spacing: 16) {
                 header
                 content
+                Spacer(minLength: 60) // Add bottom spacing to prevent clipping behind TabBar
             }
-            .padding(20)
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 10)
             .animation(.spring(response: 0.32, dampingFraction: 0.86), value: viewModel.availableSurveys)
             .animation(.spring(response: 0.32, dampingFraction: 0.86), value: viewModel.completedSurveys)
         }
@@ -78,19 +81,34 @@ struct SurveyListView: View {
     }
 
     private var availableSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Available Surveys", count: viewModel.availableSurveys.count)
-            if viewModel.availableSurveys.isEmpty {
-                PremiumCard(padding: 16) {
-                    Text("No available surveys right now.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 18) {
+            // Section 1: Organization/Group Surveys (if any exist)
+            if !viewModel.availableOrgSurveys.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeader("My Group Surveys", count: viewModel.availableOrgSurveys.count)
+                    ForEach(viewModel.availableOrgSurveys) { survey in
+                        AvailableSurveyCard(survey: survey) {
+                            router.navigate(to: .surveyDetail(id: survey.id))
+                        }
+                    }
                 }
-            } else {
-                ForEach(viewModel.availableSurveys) { survey in
-                    AvailableSurveyCard(survey: survey) {
-                        router.navigate(to: .surveyDetail(id: survey.id))
+            }
+            
+            // Section 2: General/Global Surveys
+            VStack(alignment: .leading, spacing: 12) {
+                sectionHeader("General Surveys", count: viewModel.availableGlobalSurveys.count)
+                if viewModel.availableGlobalSurveys.isEmpty {
+                    PremiumCard(padding: 16) {
+                        Text("No general surveys right now.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                } else {
+                    ForEach(viewModel.availableGlobalSurveys) { survey in
+                        AvailableSurveyCard(survey: survey) {
+                            router.navigate(to: .surveyDetail(id: survey.id))
+                        }
                     }
                 }
             }
@@ -98,10 +116,32 @@ struct SurveyListView: View {
     }
 
     private var completedSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Completed Surveys", count: viewModel.completedSurveys.count)
-            ForEach(viewModel.completedSurveys) { survey in
-                CompletedSurveyCard(survey: survey)
+        VStack(alignment: .leading, spacing: 18) {
+            // Organization/Group Completed Surveys
+            if !viewModel.completedOrgSurveys.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeader("Completed Group Surveys", count: viewModel.completedOrgSurveys.count)
+                    ForEach(viewModel.completedOrgSurveys) { survey in
+                        CompletedSurveyCard(survey: survey)
+                    }
+                }
+            }
+
+            // General/Global Completed Surveys
+            VStack(alignment: .leading, spacing: 12) {
+                sectionHeader("Completed General Surveys", count: viewModel.completedGlobalSurveys.count)
+                if viewModel.completedGlobalSurveys.isEmpty {
+                    PremiumCard(padding: 16) {
+                        Text("Completed general surveys will appear here after submission.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                } else {
+                    ForEach(viewModel.completedGlobalSurveys) { survey in
+                        CompletedSurveyCard(survey: survey)
+                    }
+                }
             }
         }
     }

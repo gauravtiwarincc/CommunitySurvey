@@ -43,7 +43,7 @@ struct APIClient: APIClientProtocol {
                 let (data, response) = try await session.data(for: request)
                 guard let httpResponse = response as? HTTPURLResponse else { throw APIError.transport("Invalid response.") }
                 logResponse(httpResponse, data: data)
-                return try decode(data, response: httpResponse, as: responseType)
+                return try decode(data, response: httpResponse, path: endpoint.path, as: responseType)
             } catch {
                 logFailure(error, attempt: attempt)
                 lastError = error
@@ -55,12 +55,22 @@ struct APIClient: APIClientProtocol {
         throw map(lastError ?? APIError.transport("Request failed."))
     }
 
-    private func decode<Response: Decodable>(_ data: Data, response: HTTPURLResponse, as type: Response.Type) throws -> Response {
+    private func decode<Response: Decodable>(_ data: Data, response: HTTPURLResponse, path: String, as type: Response.Type) throws -> Response {
         switch response.statusCode {
         case 200..<300:
             do { return try decoder.decode(type, from: data) } catch { throw APIError.decodingError }
         case 401:
+            let errorResponse = try? decoder.decode(ServerErrorResponse.self, from: data)
+            let message = errorResponse?.message ?? "Session expired. Please log in again."
+            NotificationCenter.default.post(name: NSNotification.Name("UserSessionExpired"), object: nil, userInfo: ["message": message])
             throw APIError.unauthorized
+        case 403:
+            let errorResponse = try? decoder.decode(ServerErrorResponse.self, from: data)
+            let message = errorResponse?.message ?? "Access forbidden."
+            if path.contains("/auth") {
+                NotificationCenter.default.post(name: NSNotification.Name("UserDeactivatedDuringAuth"), object: nil, userInfo: ["message": message])
+            }
+            throw APIError.serverError(message)
         default:
             let errorResponse = try? decoder.decode(ServerErrorResponse.self, from: data)
             throw APIError.serverError(errorResponse?.message ?? "Server returned status \(response.statusCode).")

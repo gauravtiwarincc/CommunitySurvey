@@ -36,12 +36,19 @@ struct VONUserProfile: Codable, Equatable, Hashable, Sendable {
     var rewardPoints: Int
 }
 
+typealias SurveyItem = Survey
+typealias Question = SurveyQuestion
+typealias Option = SurveyOption
+typealias SurveyDashboardResponse = DashboardSurveyResponse
+
 struct Survey: Codable, Equatable, Hashable, Identifiable, Sendable {
     let id: String
     let title: String
     let description: String?
     let rewardPoints: Int
+    let isActive: Bool
     var isCompleted: Bool
+    let organizationId: String?
     let questions: [SurveyQuestion]
 
     enum CodingKeys: String, CodingKey {
@@ -49,16 +56,29 @@ struct Survey: Codable, Equatable, Hashable, Identifiable, Sendable {
         case title
         case description
         case rewardPoints
+        case isActive
         case isCompleted
+        case organizationId
         case questions
     }
 
-    init(id: String, title: String, description: String? = nil, rewardPoints: Int = 0, isCompleted: Bool = false, questions: [SurveyQuestion] = []) {
+    init(
+        id: String,
+        title: String,
+        description: String? = nil,
+        rewardPoints: Int = 0,
+        isActive: Bool = true,
+        isCompleted: Bool = false,
+        organizationId: String? = nil,
+        questions: [SurveyQuestion] = []
+    ) {
         self.id = id
         self.title = title
         self.description = description
         self.rewardPoints = rewardPoints
+        self.isActive = isActive
         self.isCompleted = isCompleted
+        self.organizationId = organizationId
         self.questions = questions
     }
 
@@ -68,7 +88,9 @@ struct Survey: Codable, Equatable, Hashable, Identifiable, Sendable {
         title = try container.decode(String.self, forKey: .title)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         rewardPoints = try container.decodeIfPresent(Int.self, forKey: .rewardPoints) ?? 0
+        isActive = try container.decodeIfPresent(Bool.self, forKey: .isActive) ?? true
         isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted) ?? false
+        organizationId = try container.decodeIfPresent(String.self, forKey: .organizationId)
         questions = try container.decodeIfPresent([SurveyQuestion].self, forKey: .questions) ?? []
     }
 
@@ -176,32 +198,40 @@ struct DashboardStats: Codable, Equatable, Sendable {
     var walletBalance: Int
 }
 
+typealias StatsSummary = DashboardStats
+
 struct DashboardSurveyResponse: Codable, Equatable, Sendable {
     let success: Bool
     var availableSurveys: [Survey]
     var completedSurveys: [Survey]
-    var stats: DashboardStats
+    var organizationSurveys: [Survey]?
+    var completedOrganizationSurveys: [Survey]?
+    var stats: DashboardStats?
 
     enum CodingKeys: String, CodingKey {
         case success
         case availableSurveys
         case completedSurveys
+        case organizationSurveys
+        case completedOrganizationSurveys
+        case stats
         case rewardPoints
         case walletBalance
     }
 
-    init(success: Bool, availableSurveys: [Survey], completedSurveys: [Survey], stats: DashboardStats) {
+    init(
+        success: Bool,
+        availableSurveys: [Survey],
+        completedSurveys: [Survey],
+        organizationSurveys: [Survey]? = nil,
+        completedOrganizationSurveys: [Survey]? = nil,
+        stats: DashboardStats? = nil
+    ) {
         self.success = success
-        self.availableSurveys = availableSurveys.map { survey in
-            var copy = survey
-            copy.isCompleted = false
-            return copy
-        }
-        self.completedSurveys = completedSurveys.map { survey in
-            var copy = survey
-            copy.isCompleted = true
-            return copy
-        }
+        self.availableSurveys = availableSurveys.map { var copy = $0; copy.isCompleted = false; return copy }
+        self.completedSurveys = completedSurveys.map { var copy = $0; copy.isCompleted = true; return copy }
+        self.organizationSurveys = organizationSurveys?.map { var copy = $0; copy.isCompleted = false; return copy }
+        self.completedOrganizationSurveys = completedOrganizationSurveys?.map { var copy = $0; copy.isCompleted = true; return copy }
         self.stats = stats
     }
 
@@ -210,19 +240,26 @@ struct DashboardSurveyResponse: Codable, Equatable, Sendable {
         success = try container.decode(Bool.self, forKey: .success)
         let available = try container.decodeIfPresent([Survey].self, forKey: .availableSurveys) ?? []
         let completed = try container.decodeIfPresent([Survey].self, forKey: .completedSurveys) ?? []
-        let rewardPoints = try container.decodeIfPresent(Int.self, forKey: .rewardPoints) ?? 0
-        let walletBalance = try container.decodeIfPresent(Int.self, forKey: .walletBalance) ?? 0
-        availableSurveys = available.map { survey in
-            var copy = survey
-            copy.isCompleted = false
-            return copy
+        let orgSurveys = try container.decodeIfPresent([Survey].self, forKey: .organizationSurveys)
+        let completedOrg = try container.decodeIfPresent([Survey].self, forKey: .completedOrganizationSurveys)
+        
+        self.availableSurveys = available.map { var copy = $0; copy.isCompleted = false; return copy }
+        self.completedSurveys = completed.map { var copy = $0; copy.isCompleted = true; return copy }
+        self.organizationSurveys = orgSurveys?.map { var copy = $0; copy.isCompleted = false; return copy }
+        self.completedOrganizationSurveys = completedOrg?.map { var copy = $0; copy.isCompleted = true; return copy }
+
+        if let statsVal = try container.decodeIfPresent(DashboardStats.self, forKey: .stats) {
+            self.stats = statsVal
+        } else {
+            let rewardPoints = try container.decodeIfPresent(Int.self, forKey: .rewardPoints) ?? 0
+            let walletBalance = try container.decodeIfPresent(Int.self, forKey: .walletBalance) ?? 0
+            self.stats = DashboardStats(
+                availableCount: self.availableSurveys.count + (self.organizationSurveys?.count ?? 0),
+                completedCount: self.completedSurveys.count + (self.completedOrganizationSurveys?.count ?? 0),
+                rewardPoints: rewardPoints,
+                walletBalance: walletBalance
+            )
         }
-        completedSurveys = completed.map { survey in
-            var copy = survey
-            copy.isCompleted = true
-            return copy
-        }
-        stats = DashboardStats(availableCount: availableSurveys.count, completedCount: completedSurveys.count, rewardPoints: rewardPoints, walletBalance: walletBalance)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -230,11 +267,16 @@ struct DashboardSurveyResponse: Codable, Equatable, Sendable {
         try container.encode(success, forKey: .success)
         try container.encode(availableSurveys, forKey: .availableSurveys)
         try container.encode(completedSurveys, forKey: .completedSurveys)
-        try container.encode(stats.rewardPoints, forKey: .rewardPoints)
-        try container.encode(stats.walletBalance, forKey: .walletBalance)
+        try container.encode(organizationSurveys, forKey: .organizationSurveys)
+        try container.encode(completedOrganizationSurveys, forKey: .completedOrganizationSurveys)
+        if let stats {
+            try container.encode(stats, forKey: .stats)
+        }
     }
 
-    var allSurveys: [Survey] { availableSurveys + completedSurveys }
+    var allSurveys: [Survey] {
+        availableSurveys + completedSurveys + (organizationSurveys ?? []) + (completedOrganizationSurveys ?? [])
+    }
 }
 
 struct SurveyListResponse: Codable, Equatable, Sendable {

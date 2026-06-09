@@ -1,92 +1,74 @@
 import Foundation
 
-struct OrganizationConfig: Codable, Equatable, Sendable, Identifiable {
+struct OrganizationConfig: Codable, Equatable, Hashable, Sendable, Identifiable {
     let id: String
     let organizationName: String
-    let logoURL: URL?
-    let primaryColor: String
-    let secondaryColor: String
-    let accentColor: String
-    let gradientStartColor: String
-    let gradientEndColor: String
-    let appIconURL: URL?
-    let supportEmail: String
-    let website: URL?
-    let welcomeMessage: String
+    let organizationCode: String
+    let logoUrl: String?
+    let primaryColor: String // Hex string e.g. "#FF6B00"
+    let secondaryColor: String // Hex string e.g. "#008A2E"
+    let accentColor: String // Hex string e.g. "#0055FF"
+    let welcomeMessage: String?
+    let supportEmail: String?
 
     enum CodingKeys: String, CodingKey {
-        case id = "organizationId"
+        case id = "_id"
         case organizationName
-        case logoURL
+        case organizationCode
+        case logoUrl
         case primaryColor
         case secondaryColor
         case accentColor
-        case gradientStartColor
-        case gradientEndColor
-        case appIconURL
-        case supportEmail
-        case website
         case welcomeMessage
+        case supportEmail
     }
 
     init(
         id: String,
         organizationName: String,
-        logoURL: URL?,
+        organizationCode: String,
+        logoUrl: String?,
         primaryColor: String,
         secondaryColor: String,
         accentColor: String,
-        gradientStartColor: String,
-        gradientEndColor: String,
-        appIconURL: URL?,
-        supportEmail: String,
-        website: URL?,
-        welcomeMessage: String
+        welcomeMessage: String?,
+        supportEmail: String?
     ) {
         self.id = id
         self.organizationName = organizationName
-        self.logoURL = logoURL
+        self.organizationCode = organizationCode
+        self.logoUrl = logoUrl
         self.primaryColor = primaryColor
         self.secondaryColor = secondaryColor
         self.accentColor = accentColor
-        self.gradientStartColor = gradientStartColor
-        self.gradientEndColor = gradientEndColor
-        self.appIconURL = appIconURL
-        self.supportEmail = supportEmail
-        self.website = website
         self.welcomeMessage = welcomeMessage
+        self.supportEmail = supportEmail
     }
 
     init(organization: OrganizationSummary) {
         self.init(
             id: organization.id,
             organizationName: organization.organizationName,
-            logoURL: organization.logoUrl.flatMap(URL.init(string:)),
+            organizationCode: "",
+            logoUrl: organization.logoUrl,
             primaryColor: organization.primaryColor,
             secondaryColor: organization.secondaryColor,
             accentColor: organization.accentColor,
-            gradientStartColor: organization.primaryColor,
-            gradientEndColor: organization.secondaryColor,
-            appIconURL: nil,
-            supportEmail: "",
-            website: nil,
-            welcomeMessage: organization.organizationName
+            welcomeMessage: organization.organizationName,
+            supportEmail: nil
         )
     }
 
     static let fallback = OrganizationConfig(
         id: "",
         organizationName: "Verified Opinion Network",
-        logoURL: nil,
+        organizationCode: "VON",
+        logoUrl: nil,
         primaryColor: "#FF6B00",
         secondaryColor: "#008A2E",
         accentColor: "#0055FF",
-        gradientStartColor: "#FF6B00",
-        gradientEndColor: "#008A2E",
-        appIconURL: nil,
-        supportEmail: "",
-        website: nil,
-        welcomeMessage: "भारत का Verified Public Opinion Platform"
+        welcomeMessage: "भारत का Verified Public Opinion Platform",
+        supportEmail: "support@von.org"
     )
 }
 
@@ -96,4 +78,9 @@ struct OrganizationTheme: Codable, Equatable, Sendable {
     let accentColor: String
     let gradientStartColor: String
     let gradientEndColor: String
+}
+
+struct OrganizationConfigResponse: Codable, Equatable, Sendable {
+    let success: Bool
+    let organization: OrganizationConfig
 }

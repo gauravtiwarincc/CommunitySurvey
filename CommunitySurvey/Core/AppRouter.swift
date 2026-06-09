@@ -18,6 +18,7 @@ enum AppRoute: Hashable {
     case adminUserDetail(id: String)
     case adminSurveyManagement
     case createSurvey
+    case adminThemeCustomization
 }
 
 @MainActor

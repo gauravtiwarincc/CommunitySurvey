@@ -53,8 +53,8 @@ struct SurveyRepository: SurveyRepositoryProtocol {
                 state: "",
                 district: "",
                 isAadhaarVerified: true,
-                walletBalance: Decimal(dashboard.stats.walletBalance),
-                rewardPoints: dashboard.stats.rewardPoints
+                walletBalance: Decimal(dashboard.stats?.walletBalance ?? 0),
+                rewardPoints: dashboard.stats?.rewardPoints ?? 0
             ),
             availableSurveys: dashboard.availableSurveys,
             completedSurveys: dashboard.completedSurveys,

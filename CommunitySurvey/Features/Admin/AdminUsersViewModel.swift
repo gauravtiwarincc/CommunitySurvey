@@ -4,9 +4,10 @@ import Observation
 @MainActor
 @Observable
 final class AdminUsersViewModel {
-    var users: [AdminUser] = []
+    var users: [AdminUserItem] = []
     var searchText = ""
     var totalCount = 0
+    var totalPages = 1
     var isLoading = false
     var errorMessage: String?
 
@@ -18,14 +19,22 @@ final class AdminUsersViewModel {
     }
 
     func load(reset: Bool = true) async {
-        guard !isLoading else { return }
-        if reset { page = 1 }
+        if reset {
+            page = 1
+            users = []
+            totalPages = 1
+        }
+        
+        guard !isLoading && (page <= totalPages || reset) else { return }
+        
         isLoading = true
         errorMessage = nil
         do {
             let response = try await adminService.fetchUsers(search: searchText, page: page)
             users = reset ? response.users : users + response.users
-            totalCount = response.totalCount ?? users.count
+            totalCount = response.pagination.totalUsers
+            totalPages = response.pagination.totalPages
+            page += 1
         } catch {
             errorMessage = error.localizedDescription
         }

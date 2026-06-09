@@ -3,6 +3,7 @@ import Foundation
 protocol OrganizationServiceProtocol: Sendable {
     func fetchOrganizationTypes() async throws -> [String]
     func fetchOrganizations(type: String) async throws -> [OrganizationSummary]
+    func fetchConfig(code: String?) async throws -> OrganizationConfig
 }
 
 @MainActor
@@ -34,5 +35,27 @@ struct OrganizationService: OrganizationServiceProtocol {
             responseType: OrganizationsResponse.self
         )
         return response.organizations
+    }
+
+    func fetchConfig(code: String?) async throws -> OrganizationConfig {
+        let path: String
+        let requiresAuth: Bool
+        if let code {
+            let encodedCode = code.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? code
+            path = "/config?code=\(encodedCode)"
+            requiresAuth = false
+        } else {
+            path = "/config"
+            requiresAuth = true
+        }
+
+        let response = try await apiClient.request(
+            path: path,
+            method: .get,
+            body: Optional<EmptyRequest>.none,
+            requiresAuthentication: requiresAuth,
+            responseType: OrganizationConfigResponse.self
+        )
+        return response.organization
     }
 }

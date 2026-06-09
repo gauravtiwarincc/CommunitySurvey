@@ -55,7 +55,20 @@ final class CreateSurveyViewModel {
         errorMessage = nil
         successMessage = nil
         do {
-            let request = CreateSurveyRequest(title: title, description: description, rewardPoints: points, questions: questions)
+            let requestQuestions = questions.map { question in
+                CreateQuestionItem(
+                    question: question.question.trimmingCharacters(in: .whitespacesAndNewlines),
+                    options: question.options
+                        .filter { !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                        .map { CreateOptionItem(title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines)) }
+                )
+            }
+            let request = CreateSurveyRequest(
+                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                description: description.trimmingCharacters(in: .whitespacesAndNewlines),
+                rewardPoints: points,
+                questions: requestQuestions
+            )
             let response = try await adminService.createSurvey(request: request)
             successMessage = response.message
         } catch {

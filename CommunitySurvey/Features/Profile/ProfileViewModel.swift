@@ -46,6 +46,31 @@ final class ProfileViewModel {
         isLoading = false
     }
 
+    func joinOrganization(code: String) async throws {
+        isLoading = true
+        defer { isLoading = false }
+        errorMessage = nil
+        do {
+            let updatedUser = try await authService.joinOrganization(code: code)
+            self.user = updatedUser
+            
+            if let currentUser = sessionManager.currentUser {
+                let updatedAuthenticatedUser = AuthenticatedUser(
+                    id: updatedUser.id,
+                    mobileNumber: updatedUser.mobile ?? currentUser.mobileNumber,
+                    countryCode: currentUser.countryCode,
+                    role: updatedUser.role,
+                    organization: updatedUser.organizationId
+                )
+                sessionManager.updateUser(user: updatedAuthenticatedUser)
+                themeManager.apply(organization: updatedUser.organizationId)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            throw error
+        }
+    }
+
     func logout() {
         sessionManager.logout()
         surveyStore.reset()

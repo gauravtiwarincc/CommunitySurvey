@@ -50,6 +50,9 @@ struct OTPVerificationView: View {
         .navigationTitle("OTP")
         .loadingOverlay(viewModel.state.isLoading, message: "Verifying OTP")
         .animation(.spring(response: 0.32, dampingFraction: 0.84), value: viewModel.errorMessage)
+        .onAppear {
+            viewModel.fillDebugOTP()
+        }
     }
 
     private func developmentOTPBanner(_ otp: String) -> some View {

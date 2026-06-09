@@ -13,10 +13,14 @@ final class SessionManager {
     var isAuthenticated: Bool { appState.isAuthenticated }
     var currentUser: AuthenticatedUser? { appState.user }
     var currentRole: UserRole { appState.user?.role ?? .user }
-    var currentOrganization: OrganizationSummary? { appState.user?.organization }
+    var currentOrganization: OrganizationConfig? { appState.user?.organization }
 
     func completeLogin(session: AuthSession) {
         appState.completeLogin(session: session)
+    }
+
+    func updateUser(user: AuthenticatedUser) {
+        appState.updateUser(user: user)
     }
 
     func restore() {

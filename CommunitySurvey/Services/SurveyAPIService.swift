@@ -26,18 +26,14 @@ struct SurveyAPIService: SurveyServiceProtocol {
     }
 
     func getSurveys() async throws -> [Survey] {
-        let response: SurveyListResponse = try await apiClient.request(
+        let response: DashboardSurveyResponse = try await apiClient.request(
             path: "/surveys",
             method: .get,
             body: Optional<EmptyRequest>.none,
             requiresAuthentication: true,
-            responseType: SurveyListResponse.self
+            responseType: DashboardSurveyResponse.self
         )
-        return response.surveys.map { survey in
-            var copy = survey
-            copy.isCompleted = false
-            return copy
-        }
+        return response.allSurveys
     }
 
     func getSurveyDetails(id: String) async throws -> SurveyDetail {

@@ -98,6 +98,7 @@ final class OTPVerificationViewModel {
             let response = try await authService.requestOTP(mobileNumber: mobileNumber, countryCode: countryCode)
             transactionID = response.transactionID
             debugOTP = response.otp
+            fillDebugOTP()
             resendSecondsRemaining = 60
             startResendTimer()
         } catch {

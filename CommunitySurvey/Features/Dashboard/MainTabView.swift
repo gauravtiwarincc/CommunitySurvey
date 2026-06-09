@@ -41,7 +41,7 @@ struct AdminTabView: View {
             SurveyListView(viewModel: SurveyListViewModel(surveyStore: container.surveyStateStore), router: container.router)
                 .tabItem { Label("Surveys", systemImage: "doc.text.fill") }
 
-            AdminDashboardView(viewModel: AdminDashboardViewModel(adminService: container.adminService), roleManager: container.roleManager, router: container.router)
+            AdminDashboardView(viewModel: AdminDashboardViewModel(adminService: container.adminService), roleManager: container.roleManager, sessionManager: container.sessionManager, router: container.router)
                 .tabItem { Label("Admin", systemImage: "person.3.sequence.fill") }
 
             ProfileView(viewModel: ProfileViewModel(profileService: container.profileService, authService: container.authService, surveyStore: container.surveyStateStore, sessionManager: container.sessionManager, themeManager: container.themeManager, router: container.router))

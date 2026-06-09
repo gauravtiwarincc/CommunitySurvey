@@ -73,7 +73,7 @@ struct AdminUsersView: View {
         }
     }
 
-    private func userCard(_ user: AdminUser) -> some View {
+    private func userCard(_ user: AdminUserItem) -> some View {
         PremiumCard(padding: 16) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -87,19 +87,23 @@ struct AdminUsersView: View {
                         .foregroundStyle(AppTheme.indiaGreen)
                 }
                 HStack {
-                    metric("Rewards", user.statistics.rewardPoints)
-                    metric("Done", user.statistics.completedSurveys)
-                    metric("Pending", user.statistics.pendingSurveys)
+                    metric("Rewards", user.rewardPoints)
+                    metric("Wallet", "₹\(user.walletBalance)")
+                    metric("Completed", user.completedSurveysCount)
                 }
             }
         }
     }
 
-    private func metric(_ title: String, _ value: Int) -> some View {
+    private func metric(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("\(value)").font(.headline.monospacedDigit())
+            Text(value).font(.headline.monospacedDigit())
             Text(title).font(.caption).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func metric(_ title: String, _ value: Int) -> some View {
+        metric(title, "\(value)")
     }
 }

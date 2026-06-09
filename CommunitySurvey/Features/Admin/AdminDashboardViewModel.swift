@@ -4,8 +4,7 @@ import Observation
 @MainActor
 @Observable
 final class AdminDashboardViewModel {
-    var dashboard: AdminDashboard?
-    var analytics: [SurveyAnalytics] = []
+    var dashboardResponse: AdminDashboardResponse?
     var isLoading = false
     var errorMessage: String?
 
@@ -20,10 +19,7 @@ final class AdminDashboardViewModel {
         isLoading = true
         errorMessage = nil
         do {
-            async let dashboard = adminService.fetchDashboard()
-            async let analytics = adminService.fetchSurveyAnalytics()
-            self.dashboard = try await dashboard
-            self.analytics = try await analytics
+            dashboardResponse = try await adminService.fetchDashboard()
         } catch {
             errorMessage = error.localizedDescription
         }
