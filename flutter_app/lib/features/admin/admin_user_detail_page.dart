@@ -1,0 +1,331 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:community_survey/services/admin_service.dart';
+import 'package:community_survey/features/auth/auth_provider.dart';
+import 'package:community_survey/models/admin_models.dart';
+import 'package:intl/intl.dart';
+
+class AdminUserDetailPage extends ConsumerStatefulWidget {
+  final String userId;
+
+  const AdminUserDetailPage({super.key, required this.userId});
+
+  @override
+  ConsumerState<AdminUserDetailPage> createState() => _AdminUserDetailPageState();
+}
+
+class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
+  bool _isLoading = false;
+  AdminUserDetailResponse? _userDetail;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserDetail();
+  }
+
+  Future<void> _loadUserDetail() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final data = await ref.read(adminServiceProvider).fetchUserDetail(widget.userId);
+      if (mounted) {
+        setState(() => _userDetail = data);
+      }
+    } catch (e) {
+      setState(() => _errorMessage = e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _toggleUserStatus(bool targetStatus) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final updatedProfile = await ref.read(adminServiceProvider).updateUserStatus(widget.userId, targetStatus);
+      if (mounted) {
+        setState(() {
+          _userDetail = AdminUserDetailResponse(
+            success: true,
+            user: updatedProfile,
+            completedSurveys: _userDetail!.completedSurveys,
+            pendingSurveys: _userDetail!.pendingSurveys,
+          );
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(targetStatus ? 'User activated successfully.' : 'User deactivated successfully.'),
+            backgroundColor: targetStatus ? Colors.green : Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currentAdmin = ref.watch(authProvider).session?.user;
+    final isSelf = currentAdmin != null && currentAdmin.id == widget.userId;
+
+    final user = _userDetail?.user;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Member Details'),
+      ),
+      body: _isLoading && _userDetail == null
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null && _userDetail == null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(onPressed: _loadUserDetail, child: const Text('Retry')),
+                    ],
+                  ),
+                )
+              : _userDetail == null
+                  ? const Center(child: Text('User profile not found.'))
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildProfileCard(user!, isSelf, theme),
+                          const SizedBox(height: 20),
+                          _buildStatsGrid(user, theme),
+                          const SizedBox(height: 24),
+                          _buildSurveyProgressList('Completed Surveys', _userDetail!.completedSurveys, Colors.green),
+                          const SizedBox(height: 16),
+                          _buildSurveyProgressList('Pending Surveys', _userDetail!.pendingSurveys, Colors.orange),
+                        ],
+                      ),
+                    ),
+    );
+  }
+
+  Widget _buildProfileCard(UserProfileInfo user, bool isSelf, ThemeData theme) {
+    String formattedDate = '-';
+    try {
+      final parsed = DateTime.parse(user.createdAt);
+      formattedDate = DateFormat.yMMMMd().format(parsed);
+    } catch (_) {}
+
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              user.fullName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _buildDetailItem('Mobile', user.mobile),
+            _buildDetailItem('Registration Date', formattedDate),
+            if (user.state != null) _buildDetailItem('State', user.state!),
+            if (user.district != null) _buildDetailItem('District', user.district!),
+            if (user.city != null) _buildDetailItem('City/Village', user.city!),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.isActive ? 'Account Active' : 'Account Deactivated',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: user.isActive ? Colors.green : Colors.red,
+                        ),
+                      ),
+                      Text(
+                        isSelf
+                            ? 'You cannot deactivate your own account'
+                            : 'Toggle to change participant activation status',
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: user.isActive,
+                  activeColor: Colors.green,
+                  onChanged: (isSelf || _isLoading)
+                      ? null
+                      : (val) {
+                          _toggleUserStatus(val);
+                        },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid(UserProfileInfo user, ThemeData theme) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 1.5,
+      children: [
+        _buildStatBox('Completed', '${_userDetail?.completedSurveys.length ?? 0}', Colors.green),
+        _buildStatBox('Pending', '${_userDetail?.pendingSurveys.length ?? 0}', Colors.orange),
+        _buildStatBox('Points Balance', '${user.rewardPoints}', Colors.deepOrange),
+        _buildStatBox('Wallet', '₹${user.walletBalance}', Colors.teal),
+      ],
+    );
+  }
+
+  Widget _buildStatBox(String label, String value, Color color) {
+    return Card(
+      elevation: 0,
+      color: color.withOpacity(0.06),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: color.withOpacity(0.12)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSurveyProgressList(String title, List<dynamic> list, Color color) {
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.assignment_turned_in_outlined, color: color, size: 20),
+                const SizedBox(width: 8),
+                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (list.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Text('No surveys in this category', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: list.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final item = list[index];
+                  final isCompleted = item is CompletedSurveyItem;
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.title,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${item.rewardPoints} pts',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                            if (isCompleted)
+                              Text(
+                                DateFormat.yMMMd().format(DateTime.parse(item.completedAt)),
+                                style: const TextStyle(color: Colors.grey, fontSize: 10),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

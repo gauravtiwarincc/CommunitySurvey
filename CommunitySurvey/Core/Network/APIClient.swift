@@ -87,7 +87,7 @@ struct APIClient: APIClientProtocol {
         if let urlError = error as? URLError {
             switch urlError.code {
             case .cannotConnectToHost, .networkConnectionLost, .timedOut:
-                return .transport("Could not connect to the Node server at http://127.0.0.1:3001. Start the Express backend and confirm it is listening on port 3001.")
+                return .transport("Could not connect to the server at https://thesentinel.in. Please check your internet connection or server status.")
             default:
                 return .transport(urlError.localizedDescription)
             }
