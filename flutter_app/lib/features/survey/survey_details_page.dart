@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/services/survey_service.dart';
 import 'package:community_survey/models/survey.dart';
+import 'package:community_survey/features/survey/widgets/survey_timer_widget.dart';
 
 class SurveyDetailsPage extends ConsumerStatefulWidget {
   final String surveyId;
@@ -135,6 +136,10 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
                               _survey!.description!,
                               style: theme.textTheme.bodyLarge?.copyWith(color: Colors.black54),
                             ),
+                            const SizedBox(height: 24),
+                          ],
+                          if (!_survey!.isCompleted && _survey!.expiresAt != null) ...[
+                            SurveyTimerWidget(expiresAt: _survey!.expiresAt!),
                             const SizedBox(height: 24),
                           ],
                           ..._survey!.questions.map((q) => _buildQuestionCard(q, theme)),

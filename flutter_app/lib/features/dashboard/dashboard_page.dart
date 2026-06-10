@@ -7,6 +7,9 @@ import 'package:community_survey/features/survey/survey_details_page.dart';
 import 'package:community_survey/features/auth/auth_provider.dart';
 import 'package:community_survey/core/theme/theme_controller.dart';
 import 'package:community_survey/models/admin_models.dart';
+import 'package:community_survey/features/admin/admin_user_detail_page.dart';
+import 'package:community_survey/features/rewards/redeem_rewards_page.dart';
+import 'package:community_survey/features/survey/widgets/survey_timer_widget.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -228,37 +231,49 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Reward points capsule badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.card_giftcard, color: Colors.white, size: 16),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$rewardPoints pts',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RedeemRewardsPage(),
                     ),
-                  ],
+                  ).then((_) => _loadData());
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.card_giftcard, color: Colors.white, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$rewardPoints pts',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               // Wallet button capsule
               InkWell(
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Wallet balance: ₹${_dashboardData?.stats?.walletBalance ?? 0}'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
+                  final profile = ref.read(authProvider).profile;
+                  if (profile != null) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AdminUserDetailPage(userId: profile.id),
+                      ),
+                    ).then((_) => _loadData());
+                  }
                 },
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
@@ -417,6 +432,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(color: Colors.grey, fontSize: 13),
                       ),
+                    ],
+                    if (!isCompleted && survey.expiresAt != null) ...[
+                      const SizedBox(height: 8),
+                      SurveyTimerWidget(expiresAt: survey.expiresAt!, compact: true),
                     ],
                   ],
                 ),

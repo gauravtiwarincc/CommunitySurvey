@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/services/survey_service.dart';
 import 'package:community_survey/models/survey.dart';
 import 'package:community_survey/features/survey/survey_details_page.dart';
+import 'package:community_survey/features/survey/widgets/survey_timer_widget.dart';
 
 class SurveyListPage extends ConsumerStatefulWidget {
   const SurveyListPage({super.key});
@@ -222,7 +223,19 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
           survey.title,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: survey.description != null ? Text(survey.description!) : null,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (survey.description != null) ...[
+              const SizedBox(height: 4),
+              Text(survey.description!),
+            ],
+            if (!isCompleted && survey.expiresAt != null) ...[
+              const SizedBox(height: 8),
+              SurveyTimerWidget(expiresAt: survey.expiresAt!, compact: true),
+            ],
+          ],
+        ),
         trailing: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.center,

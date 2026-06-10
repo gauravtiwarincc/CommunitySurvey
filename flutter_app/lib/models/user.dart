@@ -117,4 +117,50 @@ class User {
       'isActive': isActive,
     };
   }
+
+  User copyWith({
+    String? id,
+    String? fullName,
+    String? mobile,
+    String? aadhaar,
+    UserRole? role,
+    OrganizationConfig? organization,
+    String? organizationType,
+    String? state,
+    String? district,
+    String? city,
+    String? fathersName,
+    String? gender,
+    String? address,
+    String? pincode,
+    String? education,
+    String? occupation,
+    String? socialCategory,
+    int? walletBalance,
+    int? rewardPoints,
+    bool? isActive,
+  }) {
+    return User(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      mobile: mobile ?? this.mobile,
+      aadhaar: aadhaar ?? this.aadhaar,
+      role: role ?? this.role,
+      organization: organization ?? this.organization,
+      organizationType: organizationType ?? this.organizationType,
+      state: state ?? this.state,
+      district: district ?? this.district,
+      city: city ?? this.city,
+      fathersName: fathersName ?? this.fathersName,
+      gender: gender ?? this.gender,
+      address: address ?? this.address,
+      pincode: pincode ?? this.pincode,
+      education: education ?? this.education,
+      occupation: occupation ?? this.occupation,
+      socialCategory: socialCategory ?? this.socialCategory,
+      walletBalance: walletBalance ?? this.walletBalance,
+      rewardPoints: rewardPoints ?? this.rewardPoints,
+      isActive: isActive ?? this.isActive,
+    );
+  }
 }

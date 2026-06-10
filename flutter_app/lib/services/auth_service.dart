@@ -46,10 +46,10 @@ class AuthService {
 
   Future<AuthSession> register({
     required String fullName,
-    required String fathersName,
+    String fathersName = '',
     required String gender,
     required String mobile,
-    required String aadhaar,
+    String aadhaar = '',
     required String address,
     required String role,
     String? organizationId,
@@ -92,6 +92,41 @@ class AuthService {
       return AuthSession.fromJson(data as Map<String, dynamic>);
     } else {
       throw Exception(data['message'] ?? 'Registration failed.');
+    }
+  }
+
+  Future<User> updateProfile({
+    String? fullName,
+    String? gender,
+    String? address,
+    String? state,
+    String? district,
+    String? city,
+    String? pincode,
+    String? education,
+    String? occupation,
+    String? socialCategory,
+  }) async {
+    final response = await _dio.put(
+      ApiEndpoints.profile,
+      data: {
+        if (fullName != null) 'fullName': fullName,
+        if (gender != null) 'gender': gender,
+        if (address != null) 'address': address,
+        if (state != null) 'state': state,
+        if (district != null) 'district': district,
+        if (city != null) 'city': city,
+        if (pincode != null) 'pincode': pincode,
+        if (education != null) 'education': education,
+        if (occupation != null) 'occupation': occupation,
+        if (socialCategory != null) 'socialCategory': socialCategory,
+      },
+    );
+    final data = response.data;
+    if (data['success'] == true) {
+      return User.fromJson(data['user'] as Map<String, dynamic>);
+    } else {
+      throw Exception(data['message'] ?? 'Failed to update profile.');
     }
   }
 

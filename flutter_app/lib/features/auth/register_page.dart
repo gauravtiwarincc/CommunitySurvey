@@ -24,9 +24,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _fullNameController = TextEditingController();
-  final _fathersNameController = TextEditingController();
   final _mobileController = TextEditingController();
-  final _aadhaarController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _pincodeController = TextEditingController();
@@ -44,9 +42,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   @override
   void dispose() {
     _fullNameController.dispose();
-    _fathersNameController.dispose();
     _mobileController.dispose();
-    _aadhaarController.dispose();
     _addressController.dispose();
     _cityController.dispose();
     _pincodeController.dispose();
@@ -64,10 +60,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     try {
       final session = await ref.read(authServiceProvider).register(
         fullName: _fullNameController.text.trim(),
-        fathersName: _fathersNameController.text.trim(),
+        fathersName: '',
         gender: _gender,
         mobile: _mobileController.text.trim(),
-        aadhaar: _aadhaarController.text.trim(),
+        aadhaar: '',
         address: _addressController.text.trim(),
         role: 'user',
         organizationId: widget.config?.id,
@@ -164,12 +160,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person)),
                   validator: (val) => val == null || val.isEmpty ? 'Please enter full name' : null,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _fathersNameController,
-                  decoration: const InputDecoration(labelText: "Father's Name", prefixIcon: Icon(Icons.family_restroom)),
-                  validator: (val) => val == null || val.isEmpty ? 'Please enter father\'s name' : null,
-                ),
+
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: _gender,
@@ -186,13 +177,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   keyboardType: TextInputType.phone,
                   validator: (val) => val == null || val.length < 10 ? 'Please enter valid mobile' : null,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _aadhaarController,
-                  decoration: const InputDecoration(labelText: 'Aadhaar Number (12 Digits)', prefixIcon: Icon(Icons.credit_card)),
-                  keyboardType: TextInputType.number,
-                  validator: (val) => val == null || val.length != 12 ? 'Please enter 12 digit Aadhaar' : null,
-                ),
+
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _addressController,

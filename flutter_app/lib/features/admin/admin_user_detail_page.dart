@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/services/admin_service.dart';
+import 'package:community_survey/services/survey_service.dart';
 import 'package:community_survey/features/auth/auth_provider.dart';
 import 'package:community_survey/models/admin_models.dart';
+import 'package:community_survey/models/user.dart';
 import 'package:intl/intl.dart';
 
 class AdminUserDetailPage extends ConsumerStatefulWidget {
@@ -31,10 +33,66 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
       _errorMessage = null;
     });
 
+    final currentUserId = ref.read(authProvider).profile?.id;
+    final isSelf = currentUserId != null && currentUserId == widget.userId;
+
     try {
-      final data = await ref.read(adminServiceProvider).fetchUserDetail(widget.userId);
-      if (mounted) {
-        setState(() => _userDetail = data);
+      if (isSelf) {
+        final profile = ref.read(authProvider).profile;
+        if (profile == null) {
+          throw Exception('Profile not loaded');
+        }
+        final dashboardData = await ref.read(surveyServiceProvider).fetchSurveysDashboard();
+
+        final userProfileInfo = UserProfileInfo(
+          id: profile.id,
+          fullName: profile.fullName,
+          mobile: profile.mobile ?? '',
+          aadhaar: profile.aadhaar ?? '',
+          role: profile.role.name,
+          walletBalance: profile.walletBalance ?? 0,
+          rewardPoints: profile.rewardPoints ?? 0,
+          state: profile.state,
+          district: profile.district,
+          city: profile.city,
+          createdAt: '',
+          isActive: profile.isActive,
+        );
+
+        final pending = [
+          ...(dashboardData.organizationSurveys ?? []),
+          ...dashboardData.availableSurveys,
+        ].map((s) => PendingSurveyItem(
+          surveyId: s.id,
+          title: s.title,
+          rewardPoints: s.rewardPoints,
+        )).toList();
+
+        final completed = [
+          ...(dashboardData.completedOrganizationSurveys ?? []),
+          ...dashboardData.completedSurveys,
+        ].map((s) => CompletedSurveyItem(
+          surveyId: s.id,
+          title: s.title,
+          rewardPoints: s.rewardPoints,
+          completedAt: DateTime.now().toIso8601String(),
+        )).toList();
+
+        if (mounted) {
+          setState(() {
+            _userDetail = AdminUserDetailResponse(
+              success: true,
+              user: userProfileInfo,
+              completedSurveys: completed,
+              pendingSurveys: pending,
+            );
+          });
+        }
+      } else {
+        final data = await ref.read(adminServiceProvider).fetchUserDetail(widget.userId);
+        if (mounted) {
+          setState(() => _userDetail = data);
+        }
       }
     } catch (e) {
       setState(() => _errorMessage = e.toString().replaceAll('Exception: ', ''));
@@ -143,6 +201,21 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
       formattedDate = DateFormat.yMMMMd().format(parsed);
     } catch (_) {}
 
+    final currentUserProfile = ref.watch(authProvider).profile;
+    final currentRole = currentUserProfile?.role ?? UserRole.user;
+    final targetRole = UserRole.fromString(user.role);
+
+    bool canToggleStatus = false;
+    if (!isSelf && currentUserProfile != null) {
+      if (currentRole == UserRole.superAdmin) {
+        canToggleStatus = true;
+      } else if (currentRole == UserRole.admin) {
+        if (targetRole == UserRole.user) {
+          canToggleStatus = true;
+        }
+      }
+    }
+
     return Card(
       elevation: 0,
       color: Colors.white,
@@ -182,7 +255,9 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
                       Text(
                         isSelf
                             ? 'You cannot deactivate your own account'
-                            : 'Toggle to change participant activation status',
+                            : (!canToggleStatus && (targetRole == UserRole.admin || targetRole == UserRole.superAdmin))
+                                ? 'Only Super Admins can toggle Admin accounts'
+                                : 'Toggle to change participant activation status',
                         style: const TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                     ],
@@ -191,11 +266,11 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
                 Switch.adaptive(
                   value: user.isActive,
                   activeColor: Colors.green,
-                  onChanged: (isSelf || _isLoading)
-                      ? null
-                      : (val) {
+                  onChanged: (canToggleStatus && !_isLoading)
+                      ? (val) {
                           _toggleUserStatus(val);
-                        },
+                        }
+                      : null,
                 ),
               ],
             ),
