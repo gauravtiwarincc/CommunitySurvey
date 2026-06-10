@@ -4,6 +4,9 @@ import 'package:community_survey/services/survey_service.dart';
 import 'package:community_survey/models/survey.dart';
 import 'package:community_survey/features/survey/survey_details_page.dart';
 import 'package:community_survey/features/survey/widgets/survey_timer_widget.dart';
+import 'package:community_survey/core/theme/premium_theme.dart';
+import 'package:community_survey/core/widgets/glass_card.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SurveyListPage extends ConsumerStatefulWidget {
   const SurveyListPage({super.key});
@@ -54,6 +57,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final activeColor = theme.colorScheme.primary;
 
     final availableOrg = _dashboardData?.organizationSurveys ?? [];
     final availableGlobal = _dashboardData?.availableSurveys ?? [];
@@ -61,78 +65,100 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
     final completedGlobal = _dashboardData?.completedSurveys ?? [];
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Surveys'),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: theme.colorScheme.secondary,
-          tabs: const [
-            Tab(text: 'Available'),
-            Tab(text: 'Completed'),
-          ],
+        title: Text(
+          'Surveys',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.03),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withOpacity(0.06)),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white38,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: activeColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: activeColor.withOpacity(0.2)),
+              ),
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(text: 'Available'),
+                Tab(text: 'Completed'),
+              ],
+            ),
+          ),
         ),
         actions: [
-          IconButton(onPressed: _loadSurveys, icon: const Icon(Icons.refresh)),
+          IconButton(onPressed: _loadSurveys, icon: const Icon(Icons.refresh, color: Colors.white)),
         ],
       ),
-      body: _isLoading && _dashboardData == null
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null && _dashboardData == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: PremiumMeshBackground(
+        child: _isLoading && _dashboardData == null
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null && _dashboardData == null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                        const SizedBox(height: 16),
+                        ElevatedButton(onPressed: _loadSurveys, child: const Text('Retry')),
+                      ],
+                    ),
+                  )
+                : TabBarView(
+                    controller: _tabController,
                     children: [
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(onPressed: _loadSurveys, child: const Text('Retry')),
+                      _buildAvailableTab(availableOrg, availableGlobal, theme),
+                      _buildCompletedTab(completedOrg, completedGlobal, theme),
                     ],
                   ),
-                )
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildAvailableTab(availableOrg, availableGlobal, theme),
-                    _buildCompletedTab(completedOrg, completedGlobal, theme),
-                  ],
-                ),
+      ),
     );
   }
 
   Widget _buildAvailableTab(List<Survey> orgList, List<Survey> globalList, ThemeData theme) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 120, 16, 100),
       children: [
-        _buildSectionHeader('My Group Surveys', orgList.length, theme),
-        const SizedBox(height: 8),
+        _buildSectionHeader('Group Surveys', orgList.length, theme),
+        const SizedBox(height: 12),
         if (orgList.isEmpty)
-          const Card(
-            elevation: 0,
-            color: Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
+          const GlassCard(
+            padding: EdgeInsets.all(20.0),
+            child: Center(
               child: Text(
                 'No group surveys right now.',
-                style: TextStyle(color: Colors.grey, fontSize: 13),
+                style: TextStyle(color: Colors.white38, fontSize: 13),
               ),
             ),
           )
         else
           ...orgList.map((s) => _buildSurveyCard(s, false, theme)),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         _buildSectionHeader('General Surveys', globalList.length, theme),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         if (globalList.isEmpty)
-          const Card(
-            elevation: 0,
-            color: Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
+          const GlassCard(
+            padding: EdgeInsets.all(20.0),
+            child: Center(
               child: Text(
                 'No general surveys right now.',
-                style: TextStyle(color: Colors.grey, fontSize: 13),
+                style: TextStyle(color: Colors.white38, fontSize: 13),
               ),
             ),
           )
@@ -144,37 +170,33 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
 
   Widget _buildCompletedTab(List<Survey> orgList, List<Survey> globalList, ThemeData theme) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 120, 16, 100),
       children: [
         _buildSectionHeader('Completed Group Surveys', orgList.length, theme),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         if (orgList.isEmpty)
-          const Card(
-            elevation: 0,
-            color: Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
+          const GlassCard(
+            padding: EdgeInsets.all(20.0),
+            child: Center(
               child: Text(
                 'Completed group surveys will appear here.',
-                style: TextStyle(color: Colors.grey, fontSize: 13),
+                style: TextStyle(color: Colors.white38, fontSize: 13),
               ),
             ),
           )
         else
           ...orgList.map((s) => _buildSurveyCard(s, true, theme)),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         _buildSectionHeader('Completed General Surveys', globalList.length, theme),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         if (globalList.isEmpty)
-          const Card(
-            elevation: 0,
-            color: Colors.white,
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
+          const GlassCard(
+            padding: EdgeInsets.all(20.0),
+            child: Center(
               child: Text(
                 'Completed general surveys will appear here.',
-                style: TextStyle(color: Colors.grey, fontSize: 13),
+                style: TextStyle(color: Colors.white38, fontSize: 13),
               ),
             ),
           )
@@ -190,20 +212,25 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
       children: [
         Text(
           title,
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
           ),
           child: Text(
             '$count',
             style: TextStyle(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
         ),
@@ -212,59 +239,84 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
   }
 
   Widget _buildSurveyCard(Survey survey, bool isCompleted, ThemeData theme) {
-    return Card(
-      margin: const EdgeInsets.only(top: 8, bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 0,
-      color: Colors.white,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        title: Text(
-          survey.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (survey.description != null) ...[
-              const SizedBox(height: 4),
-              Text(survey.description!),
-            ],
-            if (!isCompleted && survey.expiresAt != null) ...[
-              const SizedBox(height: 8),
-              SurveyTimerWidget(expiresAt: survey.expiresAt!, compact: true),
-            ],
-          ],
-        ),
-        trailing: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isCompleted ? Colors.green.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                isCompleted ? 'Completed' : '+${survey.rewardPoints} pts',
-                style: TextStyle(
-                  color: isCompleted ? Colors.green : theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: GlassCard(
+        padding: const EdgeInsets.all(16.0),
+        child: InkWell(
+          onTap: isCompleted
+              ? null
+              : () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SurveyDetailsPage(surveyId: survey.id),
+                    ),
+                  ).then((_) => _loadSurveys());
+                },
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      survey.title,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (survey.description != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        survey.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    if (!isCompleted && survey.expiresAt != null) ...[
+                      const SizedBox(height: 10),
+                      SurveyTimerWidget(expiresAt: survey.expiresAt!, compact: true),
+                    ],
+                  ],
                 ),
               ),
-            ),
-          ],
-        ),
-        onTap: isCompleted
-            ? null
-            : () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => SurveyDetailsPage(surveyId: survey.id),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isCompleted ? Colors.green.withOpacity(0.08) : theme.colorScheme.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isCompleted ? Colors.green.withOpacity(0.2) : theme.colorScheme.primary.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Text(
+                      isCompleted ? 'Completed' : '+${survey.rewardPoints} PTS',
+                      style: GoogleFonts.plusJakartaSans(
+                        color: isCompleted ? Colors.green : theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
                   ),
-                ).then((_) => _loadSurveys());
-              },
+                  if (!isCompleted) ...[
+                    const SizedBox(height: 10),
+                    const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.white30),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -10,6 +10,9 @@ import 'package:community_survey/models/admin_models.dart';
 import 'package:community_survey/features/admin/admin_user_detail_page.dart';
 import 'package:community_survey/features/rewards/redeem_rewards_page.dart';
 import 'package:community_survey/features/survey/widgets/survey_timer_widget.dart';
+import 'package:community_survey/core/theme/premium_theme.dart';
+import 'package:community_survey/core/widgets/glass_card.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -55,89 +58,102 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final themeState = ref.watch(themeProvider);
     final orgConfig = themeState.config;
     final stats = _dashboardData?.stats;
-    print('DEBUG: DashboardPage build: orgConfig = $orgConfig, stats = $stats');
+
+    final primaryColor = orgConfig != null ? _parseHexColor(orgConfig.primaryColor, PremiumTheme.glowPurple) : PremiumTheme.glowPurple;
+    final secondaryColor = orgConfig != null ? _parseHexColor(orgConfig.secondaryColor, PremiumTheme.glowMagenta) : PremiumTheme.glowMagenta;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Text(
+          'Portal',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
           ),
         ],
       ),
-      body: _isLoading && _dashboardData == null
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null && _dashboardData == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadData,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16.0),
+      body: PremiumMeshBackground(
+        orgPrimary: primaryColor,
+        orgSecondary: secondaryColor,
+        child: _isLoading && _dashboardData == null
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null && _dashboardData == null
+                ? Center(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildGroupTile(context, orgConfig, stats?.rewardPoints ?? 0, theme),
+                        Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
                         const SizedBox(height: 16),
-                        _buildStatsGrid(theme),
-                        const SizedBox(height: 20),
-                        AdCarousel(theme: theme),
-                        const SizedBox(height: 24),
-                        
-                        // Available Sections
-                        _buildSectionHeader('My Group Surveys', _dashboardData?.organizationSurveys?.length ?? 0, theme),
-                        const SizedBox(height: 8),
-                        if (_dashboardData?.organizationSurveys?.isEmpty ?? true)
-                          const Card(
-                            elevation: 0,
-                            color: Colors.white,
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Text(
-                                'No group surveys right now.',
-                                style: TextStyle(color: Colors.grey, fontSize: 13),
-                              ),
-                            ),
-                          )
-                        else
-                          ...(_dashboardData!.organizationSurveys!.map((survey) {
-                            return _buildSurveyCard(context, survey, false, theme);
-                          })),
-                        const SizedBox(height: 16),
-
-                        _buildSectionHeader('General Surveys', _dashboardData?.availableSurveys.length ?? 0, theme),
-                        const SizedBox(height: 8),
-                        if (_dashboardData?.availableSurveys.isEmpty ?? true)
-                          const Card(
-                            elevation: 0,
-                            color: Colors.white,
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Text(
-                                'No general surveys right now.',
-                                style: TextStyle(color: Colors.grey, fontSize: 13),
-                              ),
-                            ),
-                          )
-                        else
-                          ...(_dashboardData!.availableSurveys.map((survey) {
-                            return _buildSurveyCard(context, survey, false, theme);
-                          })),
+                        ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
                       ],
                     ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    color: primaryColor,
+                    backgroundColor: PremiumTheme.surface,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 90), // AppBar breathing room
+                          _buildGroupTile(context, orgConfig, stats?.rewardPoints ?? 0, theme),
+                          const SizedBox(height: 20),
+                          _buildStatsProgress(theme, stats?.availableCount ?? 0, stats?.completedCount ?? 0),
+                          const SizedBox(height: 20),
+                          AdCarousel(theme: theme),
+                          const SizedBox(height: 28),
+                          
+                          // Available Sections
+                          _buildSectionHeader('Group Surveys', _dashboardData?.organizationSurveys?.length ?? 0, theme),
+                          const SizedBox(height: 12),
+                          if (_dashboardData?.organizationSurveys?.isEmpty ?? true)
+                            const GlassCard(
+                              padding: EdgeInsets.all(20.0),
+                              child: Center(
+                                child: Text(
+                                  'No group surveys right now.',
+                                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                                ),
+                              ),
+                            )
+                          else
+                            ...(_dashboardData!.organizationSurveys!.map((survey) {
+                              return _buildSurveyCard(context, survey, false, theme);
+                            })),
+                          const SizedBox(height: 20),
+
+                          _buildSectionHeader('General Surveys', _dashboardData?.availableSurveys.length ?? 0, theme),
+                          const SizedBox(height: 12),
+                          if (_dashboardData?.availableSurveys.isEmpty ?? true)
+                            const GlassCard(
+                              padding: EdgeInsets.all(20.0),
+                              child: Center(
+                                child: Text(
+                                  'No general surveys right now.',
+                                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                                ),
+                              ),
+                            )
+                          else
+                            ...(_dashboardData!.availableSurveys.map((survey) {
+                              return _buildSurveyCard(context, survey, false, theme);
+                            })),
+                          const SizedBox(height: 100), // Bottom Navigation Bar breathing room
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+      ),
     );
   }
 
@@ -154,15 +170,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _buildGroupTile(BuildContext context, OrganizationConfig? orgConfig, int rewardPoints, ThemeData theme) {
-    print('DEBUG: _buildGroupTile called: orgConfig = $orgConfig, rewardPoints = $rewardPoints');
     final orgName = orgConfig?.organizationName ?? 'Tiwari Market';
     final welcomeMsg = orgConfig?.welcomeMessage ?? "Welcome to Tiwari Market's Group";
     
-    // Smooth gradient (orange to purple like the reference screenshot)
+    final primary = orgConfig != null ? _parseHexColor(orgConfig.primaryColor, PremiumTheme.glowPurple) : PremiumTheme.glowPurple;
+    final secondary = orgConfig != null ? _parseHexColor(orgConfig.secondaryColor, PremiumTheme.glowMagenta) : PremiumTheme.glowMagenta;
+
+    // CRED/Stripe inspired credit card gradient
     final gradient = LinearGradient(
       colors: [
-        orgConfig != null ? _parseHexColor(orgConfig.primaryColor, const Color(0xFFFF6B4A)) : const Color(0xFFFF6B4A),
-        orgConfig != null ? _parseHexColor(orgConfig.secondaryColor, const Color(0xFF4A15B3)) : const Color(0xFF4A15B3),
+        primary,
+        secondary,
       ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -175,131 +193,162 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: primary.withOpacity(0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          // Holographic stripe look
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Icon(
+              Icons.stars,
+              size: 140,
+              color: Colors.white.withOpacity(0.08),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      orgName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                    // Metallic chip look
+                    Container(
+                      height: 32,
+                      width: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.sim_card, color: Colors.white70, size: 20),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      welcomeMsg,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
-                        fontSize: 14,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.verified, color: Colors.white, size: 13),
+                          SizedBox(width: 4),
+                          Text(
+                            'Member',
+                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
+                const SizedBox(height: 24),
+                Text(
+                  orgName.toUpperCase(),
+                  style: GoogleFonts.plusJakartaSans(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.verified_user,
-                  color: Colors.white,
-                  size: 24,
+                const SizedBox(height: 6),
+                Text(
+                  welcomeMsg,
+                  style: GoogleFonts.inter(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Reward points capsule badge
-              InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RedeemRewardsPage(),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Reward points badge
+                    InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const RedeemRewardsPage(),
+                          ),
+                        ).then((_) => _loadData());
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.stars, color: Colors.white, size: 15),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$rewardPoints PTS',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ).then((_) => _loadData());
-                },
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.card_giftcard, color: Colors.white, size: 16),
-                      const SizedBox(width: 6),
-                      Text(
-                        '$rewardPoints pts',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                    // Wallet details redirect
+                    InkWell(
+                      onTap: () {
+                        final profile = ref.read(authProvider).profile;
+                        if (profile != null) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => AdminUserDetailPage(userId: profile.id),
+                            ),
+                          ).then((_) => _loadData());
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.account_balance_wallet, color: Colors.white, size: 15),
+                            const SizedBox(width: 8),
+                            Text(
+                              'WALLET',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-              // Wallet button capsule
-              InkWell(
-                onTap: () {
-                  final profile = ref.read(authProvider).profile;
-                  if (profile != null) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => AdminUserDetailPage(userId: profile.id),
-                      ),
-                    ).then((_) => _loadData());
-                  }
-                },
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.account_balance_wallet, color: Colors.white, size: 16),
-                      SizedBox(width: 6),
-                      Text(
-                        'Wallet',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -312,20 +361,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       children: [
         Text(
           title,
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
           ),
           child: Text(
             '$count',
             style: TextStyle(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
         ),
@@ -333,87 +387,82 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildStatsGrid(ThemeData theme) {
-    final stats = _dashboardData?.stats;
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.6,
-      children: [
-        _buildStatCard(
-          title: 'Available Surveys',
-          value: '${stats?.availableCount ?? 0}',
-          icon: Icons.assignment,
-          color: theme.colorScheme.primary,
-        ),
-        _buildStatCard(
-          title: 'Completed Surveys',
-          value: '${stats?.completedCount ?? 0}',
-          icon: Icons.check_circle,
-          color: Colors.green,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withOpacity(0.15)),
-      ),
-      color: color.withOpacity(0.06),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const Spacer(),
-            Text(
-              value,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+  Widget _buildStatsProgress(ThemeData theme, int available, int completed) {
+    final total = available + completed;
+    final percent = total > 0 ? completed / total : 0.0;
+    
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          // Gamified Circular Indicator
+          SizedBox(
+            height: 54,
+            width: 54,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: percent,
+                  backgroundColor: Colors.white.withOpacity(0.04),
+                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                  strokeWidth: 5,
+                ),
+                Text(
+                  '${(percent * 100).toInt()}%',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Participation Streak',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Completed $completed of $total total available tasks.',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: Colors.white60,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSurveyCard(BuildContext context, Survey survey, bool isCompleted, ThemeData theme) {
-    return Card(
-      margin: const EdgeInsets.only(top: 8, bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 0,
-      color: Colors.white,
-      child: InkWell(
-        onTap: isCompleted
-            ? null
-            : () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => SurveyDetailsPage(surveyId: survey.id),
-                  ),
-                ).then((_) => _loadData());
-              },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: GlassCard(
+        padding: const EdgeInsets.all(16.0),
+        child: InkWell(
+          onTap: isCompleted
+              ? null
+              : () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SurveyDetailsPage(surveyId: survey.id),
+                    ),
+                  ).then((_) => _loadData());
+                },
           child: Row(
             children: [
               Expanded(
@@ -422,7 +471,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   children: [
                     Text(
                       survey.title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                     if (survey.description != null) ...[
                       const SizedBox(height: 4),
@@ -430,38 +483,44 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         survey.description!,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        style: GoogleFonts.inter(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                     if (!isCompleted && survey.expiresAt != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       SurveyTimerWidget(expiresAt: survey.expiresAt!, compact: true),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: isCompleted ? Colors.green.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      color: isCompleted ? Colors.green.withOpacity(0.08) : theme.colorScheme.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isCompleted ? Colors.green.withOpacity(0.2) : theme.colorScheme.primary.withOpacity(0.2),
+                      ),
                     ),
                     child: Text(
-                      isCompleted ? 'Completed' : '+${survey.rewardPoints} pts',
-                      style: TextStyle(
+                      isCompleted ? 'Completed' : '+${survey.rewardPoints} PTS',
+                      style: GoogleFonts.plusJakartaSans(
                         color: isCompleted ? Colors.green : theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        fontSize: 11,
                       ),
                     ),
                   ),
                   if (!isCompleted) ...[
-                    const SizedBox(height: 8),
-                    const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    const SizedBox(height: 10),
+                    const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.white30),
                   ],
                 ],
               ),
@@ -570,18 +629,32 @@ class _AdCarouselState extends State<AdCarousel> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        backgroundColor: const Color(0xFF161823),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Colors.white10),
+        ),
+        title: Row(
           children: [
-            Icon(Icons.stars, color: Colors.amber, size: 28),
-            SizedBox(width: 8),
-            Text('Video Completed!'),
+            const Icon(Icons.stars, color: Colors.amber, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Video Completed!',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
-        content: const Text('Thank you for watching the sponsored video advertisement. You have earned +5 reward points!'),
+        content: Text(
+          'Thank you for watching the sponsored video advertisement. You have earned +5 reward points!',
+          style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Awesome'),
+            child: Text(
+              'Awesome',
+              style: TextStyle(color: widget.theme.colorScheme.primary, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -597,33 +670,38 @@ class _AdCarouselState extends State<AdCarousel> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Featured Advertisements',
-              style: widget.theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              'Featured Ads',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.white,
+              ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: Colors.amber.shade700.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.amber.shade700.withOpacity(0.2)),
               ),
               child: Text(
-                'Sponsored',
-                style: TextStyle(
-                  color: Colors.amber.shade900,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                'SPONSORED',
+                style: GoogleFonts.plusJakartaSans(
+                  color: Colors.amber.shade400,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           child: Container(
-            height: 160,
+            height: 154,
             width: double.infinity,
-            color: Colors.grey.shade100,
+            color: const Color(0xFF12141C),
             child: Stack(
               children: [
                 if (_isPlayingAdVideo)
@@ -635,7 +713,7 @@ class _AdCarouselState extends State<AdCarousel> {
                       alignment: Alignment.center,
                       children: [
                         Opacity(
-                          opacity: 0.4,
+                          opacity: 0.35,
                           child: Image.network(
                             _ads[1]['image']!,
                             fit: BoxFit.cover,
@@ -646,16 +724,16 @@ class _AdCarouselState extends State<AdCarousel> {
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const CircularProgressIndicator(color: Colors.white),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Playing Advertisement Video...',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            CircularProgressIndicator(color: widget.theme.colorScheme.primary),
+                            const SizedBox(height: 14),
+                            Text(
+                              'Playing sponsored video...',
+                              style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Earning reward points in ${_countdown > 0 ? _countdown : 1}s',
-                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                              style: GoogleFonts.inter(color: Colors.white60, fontSize: 11),
                             ),
                           ],
                         ),
@@ -665,15 +743,15 @@ class _AdCarouselState extends State<AdCarousel> {
                           right: 0,
                           child: LinearProgressIndicator(
                             value: _adVideoProgress,
-                            backgroundColor: Colors.white24,
-                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+                            backgroundColor: Colors.white12,
+                            valueColor: AlwaysStoppedAnimation<Color>(widget.theme.colorScheme.primary),
                           ),
                         ),
                         Positioned(
                           top: 10,
                           right: 10,
                           child: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white70),
+                            icon: const Icon(Icons.close, color: Colors.white60),
                             onPressed: () {
                               _mockVideoTimer?.cancel();
                               setState(() {
@@ -710,8 +788,8 @@ class _AdCarouselState extends State<AdCarousel> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.black.withOpacity(0.7),
-                                  Colors.black.withOpacity(0.1),
+                                  Colors.black.withOpacity(0.8),
+                                  Colors.black.withOpacity(0.15),
                                 ],
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
@@ -728,23 +806,23 @@ class _AdCarouselState extends State<AdCarousel> {
                                   children: [
                                     if (isVideo) ...[
                                       const Icon(Icons.play_circle_fill, color: Colors.amber, size: 16),
-                                      const SizedBox(width: 4),
+                                      const SizedBox(width: 6),
                                     ],
                                     Text(
                                       ad['title']!,
-                                      style: const TextStyle(
+                                      style: GoogleFonts.plusJakartaSans(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                        fontSize: 15,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 3),
                                 Text(
                                   ad['desc']!,
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white70,
                                     fontSize: 12,
                                   ),
                                   maxLines: 2,
@@ -761,16 +839,16 @@ class _AdCarouselState extends State<AdCarousel> {
                                   onTap: () => _playAdVideo(context),
                                   borderRadius: BorderRadius.circular(40),
                                   child: Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.5),
+                                      color: Colors.black.withOpacity(0.4),
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                      border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
                                     ),
                                     child: const Icon(
                                       Icons.play_arrow,
                                       color: Colors.white,
-                                      size: 32,
+                                      size: 28,
                                     ),
                                   ),
                                 ),
@@ -789,12 +867,12 @@ class _AdCarouselState extends State<AdCarousel> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(_ads.length, (index) {
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: _currentPage == index ? 12 : 6,
-              height: 6,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: _currentPage == index ? 10 : 5,
+              height: 5,
               decoration: BoxDecoration(
-                color: _currentPage == index ? widget.theme.colorScheme.primary : Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(3),
+                color: _currentPage == index ? widget.theme.colorScheme.primary : Colors.white24,
+                borderRadius: BorderRadius.circular(2.5),
               ),
             );
           }),

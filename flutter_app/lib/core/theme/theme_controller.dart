@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/models/admin_models.dart';
+import 'package:community_survey/core/theme/premium_theme.dart';
 
 class ThemeState {
   final OrganizationConfig? config;
@@ -17,32 +18,14 @@ class ThemeController extends StateNotifier<ThemeState> {
   }
 
   static ThemeData _buildTheme(OrganizationConfig? config) {
-    final primaryColor = _parseColor(config?.primaryColor, const Color(0xFF2C0977));
-    final secondaryColor = _parseColor(config?.secondaryColor, const Color(0xFFE6005E));
-    final accentColor = _parseColor(config?.accentColor, const Color(0xFF00B300));
+    final primaryColor = _parseColor(config?.primaryColor, const Color(0xFF8B5CF6));
+    final secondaryColor = _parseColor(config?.secondaryColor, const Color(0xFFEC4899));
+    final accentColor = _parseColor(config?.accentColor, const Color(0xFF10B981));
 
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        primary: primaryColor,
-        secondary: secondaryColor,
-        tertiary: accentColor,
-        surface: const Color(0xFFF8F9FA),
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
-      ),
+    return PremiumTheme.buildTheme(
+      primary: primaryColor,
+      secondary: secondaryColor,
+      accent: accentColor,
     );
   }
 
