@@ -61,7 +61,7 @@ class _AppRootRouterState extends ConsumerState<AppRootRouter> {
     if (token != null) {
       try {
         final profile = await authService.getProfile();
-        authNotifier.setSession(AuthSession(
+        await authNotifier.setSession(AuthSession(
           accessToken: token,
           refreshToken: '',
           expiresAt: DateTime.now().add(const Duration(hours: 1)),

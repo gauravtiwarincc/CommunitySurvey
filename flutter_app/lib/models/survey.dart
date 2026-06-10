@@ -9,8 +9,8 @@ class SurveyOption {
 
   factory SurveyOption.fromJson(Map<String, dynamic> json) {
     return SurveyOption(
-      id: json['_id'] as String? ?? json['id'] as String? ?? '',
-      text: json['text'] as String? ?? '',
+      id: json['optionId'] as String? ?? json['_id'] as String? ?? json['id'] as String? ?? '',
+      text: json['text'] as String? ?? json['title'] as String? ?? '',
     );
   }
 
@@ -37,8 +37,8 @@ class SurveyQuestion {
   factory SurveyQuestion.fromJson(Map<String, dynamic> json) {
     var optionsList = json['options'] as List? ?? [];
     return SurveyQuestion(
-      id: json['_id'] as String? ?? json['id'] as String? ?? '',
-      text: json['text'] as String? ?? '',
+      id: json['questionId'] as String? ?? json['_id'] as String? ?? json['id'] as String? ?? '',
+      text: json['text'] as String? ?? json['question'] as String? ?? '',
       type: json['type'] as String? ?? 'single',
       options: optionsList.map((o) => SurveyOption.fromJson(o as Map<String, dynamic>)).toList(),
     );

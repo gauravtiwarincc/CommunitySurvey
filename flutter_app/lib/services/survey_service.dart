@@ -55,10 +55,9 @@ class SurveyService {
     return SurveyDashboardResponse.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<List<Survey>> fetchSurveysList() async {
+  Future<SurveyDashboardResponse> fetchSurveysDashboard() async {
     final response = await _dio.get(ApiEndpoints.surveysList);
-    final list = response.data['surveys'] as List? ?? [];
-    return list.map((s) => Survey.fromJson(s as Map<String, dynamic>)).toList();
+    return SurveyDashboardResponse.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<Survey> fetchSurveyDetail(String id) async {
@@ -71,10 +70,13 @@ class SurveyService {
     }
   }
 
-  Future<bool> submitSurvey(String id, List<Map<String, dynamic>> answers) async {
+  Future<bool> submitSurvey(String surveyId, List<Map<String, dynamic>> answers) async {
     final response = await _dio.post(
-      ApiEndpoints.submitSurvey(id),
-      data: {'answers': answers},
+      ApiEndpoints.submitSurvey,
+      data: {
+        'surveyId': surveyId,
+        'answers': answers,
+      },
     );
     return response.data['success'] == true;
   }

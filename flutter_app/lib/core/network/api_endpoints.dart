@@ -26,5 +26,5 @@ class ApiEndpoints {
   static const String surveysDashboard = '/dashboard';
   static const String surveysList = '/surveys';
   static String surveyDetail(String id) => '/surveys/$id';
-  static String submitSurvey(String id) => '/surveys/$id/submit';
+  static const String submitSurvey = '/surveys/submit';
 }

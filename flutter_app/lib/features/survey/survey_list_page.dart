@@ -14,7 +14,7 @@ class SurveyListPage extends ConsumerStatefulWidget {
 class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = false;
-  List<Survey> _surveys = [];
+  SurveyDashboardResponse? _dashboardData;
   String? _errorMessage;
 
   @override
@@ -37,9 +37,9 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
     });
 
     try {
-      final list = await ref.read(surveyServiceProvider).fetchSurveysList();
+      final data = await ref.read(surveyServiceProvider).fetchSurveysDashboard();
       if (mounted) {
-        setState(() => _surveys = list);
+        setState(() => _dashboardData = data);
       }
     } catch (e) {
       setState(() => _errorMessage = e.toString().replaceAll('Exception: ', ''));
@@ -54,8 +54,10 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final available = _surveys.where((s) => !s.isCompleted).toList();
-    final completed = _surveys.where((s) => s.isCompleted).toList();
+    final availableOrg = _dashboardData?.organizationSurveys ?? [];
+    final availableGlobal = _dashboardData?.availableSurveys ?? [];
+    final completedOrg = _dashboardData?.completedOrganizationSurveys ?? [];
+    final completedGlobal = _dashboardData?.completedSurveys ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -74,9 +76,9 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
           IconButton(onPressed: _loadSurveys, icon: const Icon(Icons.refresh)),
         ],
       ),
-      body: _isLoading && _surveys.isEmpty
+      body: _isLoading && _dashboardData == null
           ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null && _surveys.isEmpty
+          : _errorMessage != null && _dashboardData == null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -90,72 +92,167 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
               : TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildSurveyList(available, false, theme),
-                    _buildSurveyList(completed, true, theme),
+                    _buildAvailableTab(availableOrg, availableGlobal, theme),
+                    _buildCompletedTab(completedOrg, completedGlobal, theme),
                   ],
                 ),
     );
   }
 
-  Widget _buildSurveyList(List<Survey> list, bool isCompletedList, ThemeData theme) {
-    if (list.isEmpty) {
-      return Center(
-        child: Text(
-          isCompletedList ? 'No completed surveys yet' : 'No surveys available',
-          style: const TextStyle(color: Colors.grey),
-        ),
-      );
-    }
-
-    return ListView.builder(
+  Widget _buildAvailableTab(List<Survey> orgList, List<Survey> globalList, ThemeData theme) {
+    return ListView(
       padding: const EdgeInsets.all(16),
-      itemCount: list.length,
-      itemBuilder: (context, index) {
-        final survey = list[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          color: Colors.white,
-          elevation: 0,
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            title: Text(
-              survey.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+      children: [
+        _buildSectionHeader('My Group Surveys', orgList.length, theme),
+        const SizedBox(height: 8),
+        if (orgList.isEmpty)
+          const Card(
+            elevation: 0,
+            color: Colors.white,
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'No group surveys right now.',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
             ),
-            subtitle: survey.description != null ? Text(survey.description!) : null,
-            trailing: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isCompletedList ? Colors.green.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    isCompletedList ? 'Completed' : '+${survey.rewardPoints} pts',
-                    style: TextStyle(
-                      color: isCompletedList ? Colors.green : theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+          )
+        else
+          ...orgList.map((s) => _buildSurveyCard(s, false, theme)),
+        const SizedBox(height: 16),
+
+        _buildSectionHeader('General Surveys', globalList.length, theme),
+        const SizedBox(height: 8),
+        if (globalList.isEmpty)
+          const Card(
+            elevation: 0,
+            color: Colors.white,
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'No general surveys right now.',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
             ),
-            onTap: isCompletedList
-                ? null
-                : () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => SurveyDetailsPage(surveyId: survey.id),
-                      ),
-                    ).then((_) => _loadSurveys());
-                  },
+          )
+        else
+          ...globalList.map((s) => _buildSurveyCard(s, false, theme)),
+      ],
+    );
+  }
+
+  Widget _buildCompletedTab(List<Survey> orgList, List<Survey> globalList, ThemeData theme) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildSectionHeader('Completed Group Surveys', orgList.length, theme),
+        const SizedBox(height: 8),
+        if (orgList.isEmpty)
+          const Card(
+            elevation: 0,
+            color: Colors.white,
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Completed group surveys will appear here.',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ),
+          )
+        else
+          ...orgList.map((s) => _buildSurveyCard(s, true, theme)),
+        const SizedBox(height: 16),
+
+        _buildSectionHeader('Completed General Surveys', globalList.length, theme),
+        const SizedBox(height: 8),
+        if (globalList.isEmpty)
+          const Card(
+            elevation: 0,
+            color: Colors.white,
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Completed general surveys will appear here.',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ),
+          )
+        else
+          ...globalList.map((s) => _buildSurveyCard(s, true, theme)),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, int count, ThemeData theme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-        );
-      },
+          child: Text(
+            '$count',
+            style: TextStyle(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSurveyCard(Survey survey, bool isCompleted, ThemeData theme) {
+    return Card(
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      color: Colors.white,
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        title: Text(
+          survey.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: survey.description != null ? Text(survey.description!) : null,
+        trailing: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isCompleted ? Colors.green.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                isCompleted ? 'Completed' : '+${survey.rewardPoints} pts',
+                style: TextStyle(
+                  color: isCompleted ? Colors.green : theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        onTap: isCompleted
+            ? null
+            : () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => SurveyDetailsPage(surveyId: survey.id),
+                  ),
+                ).then((_) => _loadSurveys());
+              },
+      ),
     );
   }
 }

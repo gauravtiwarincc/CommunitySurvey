@@ -65,7 +65,7 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
 
     final payload = _selectedAnswers.entries.map((e) => {
       'questionId': e.key,
-      'selectedOptionId': e.value,
+      'selectedOption': e.value,
     }).toList();
 
     try {
@@ -177,15 +177,16 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
             const SizedBox(height: 12),
             ...question.options.map((option) {
               final isSelected = _selectedAnswers[question.id] == option.id;
-              return Container(
+              return Card(
                 margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
+                elevation: 0,
+                color: isSelected ? theme.colorScheme.primary.withOpacity(0.04) : Colors.transparent,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
+                  side: BorderSide(
                     color: isSelected ? theme.colorScheme.primary : Colors.grey.shade300,
                     width: isSelected ? 2 : 1,
                   ),
-                  color: isSelected ? theme.colorScheme.primary.withOpacity(0.04) : Colors.transparent,
                 ),
                 child: RadioListTile<String>(
                   title: Text(option.text),
