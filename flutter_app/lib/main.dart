@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/core/theme/theme_controller.dart';
 import 'package:community_survey/features/auth/auth_provider.dart';
@@ -6,6 +8,7 @@ import 'package:community_survey/features/splash/splash_page.dart';
 import 'package:community_survey/features/onboarding/organization_code_page.dart';
 import 'package:community_survey/features/auth/login_page.dart';
 import 'package:community_survey/features/dashboard/main_tab_container.dart';
+import 'package:community_survey/features/web/web_main_layout.dart';
 import 'package:community_survey/services/auth_service.dart';
 import 'package:community_survey/models/auth_session.dart';
 
@@ -26,7 +29,12 @@ class CommunitySurveyApp extends ConsumerWidget {
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'Community Survey',
-      theme: themeState.themeData,
+      theme: themeState.lightTheme,
+      darkTheme: themeState.darkTheme,
+      themeMode: ThemeMode.system,
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {PointerDeviceKind.mouse, PointerDeviceKind.touch, PointerDeviceKind.trackpad, PointerDeviceKind.stylus},
+      ),
       debugShowCheckedModeBanner: false,
       home: const AppRootRouter(),
       builder: (context, child) {
@@ -94,7 +102,7 @@ class _AppRootRouterState extends ConsumerState<AppRootRouter> {
     final isOnboardingCompleted = ref.watch(onboardingCompletedProvider);
 
     if (authState.isAuthenticated) {
-      return const MainTabContainer();
+      return kIsWeb ? const WebMainLayout() : const MainTabContainer();
     } else if (!isOnboardingCompleted) {
       return const OrganizationCodePage();
     } else {

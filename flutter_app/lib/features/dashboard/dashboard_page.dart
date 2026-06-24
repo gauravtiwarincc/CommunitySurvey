@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/services/survey_service.dart';
@@ -13,6 +15,9 @@ import 'package:community_survey/features/survey/widgets/survey_timer_widget.dar
 import 'package:community_survey/core/theme/premium_theme.dart';
 import 'package:community_survey/core/widgets/glass_card.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:community_survey/models/advertisement.dart';
+import 'package:community_survey/services/advertisement_service.dart';
+import 'package:community_survey/features/dashboard/video_player_screen.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -62,6 +67,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final primaryColor = orgConfig != null ? _parseHexColor(orgConfig.primaryColor, PremiumTheme.glowPurple) : PremiumTheme.glowPurple;
     final secondaryColor = orgConfig != null ? _parseHexColor(orgConfig.secondaryColor, PremiumTheme.glowMagenta) : PremiumTheme.glowMagenta;
 
+    final double topPadding = 16.0;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -69,13 +76,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           'Portal',
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
         actions: [
           IconButton(
             onPressed: _loadData,
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: const Icon(Icons.refresh),
           ),
         ],
       ),
@@ -98,14 +104,18 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 : RefreshIndicator(
                     onRefresh: _loadData,
                     color: primaryColor,
-                    backgroundColor: PremiumTheme.surface,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                      padding: EdgeInsets.only(
+                        left: 16.0,
+                        right: 16.0,
+                        top: topPadding,
+                        bottom: 100.0, // Bottom Navigation Bar breathing room
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 90), // AppBar breathing room
                           _buildGroupTile(context, orgConfig, stats?.rewardPoints ?? 0, theme),
                           const SizedBox(height: 20),
                           _buildStatsProgress(theme, stats?.availableCount ?? 0, stats?.completedCount ?? 0),
@@ -121,15 +131,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                               padding: EdgeInsets.all(20.0),
                               child: Center(
                                 child: Text(
-                                  'No group surveys right now.',
-                                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                                  'No group surveys available right now.',
+                                  style: TextStyle( fontSize: 13),
                                 ),
                               ),
                             )
                           else
-                            ...(_dashboardData!.organizationSurveys!.map((survey) {
-                              return _buildSurveyCard(context, survey, false, theme);
-                            })),
+                            kIsWeb
+                                ? Wrap(
+                                    spacing: 16,
+                                    runSpacing: 0,
+                                    children: _dashboardData!.organizationSurveys!.map((survey) => SizedBox(width: 350, child: _buildSurveyCard(context, survey, false, theme))).toList(),
+                                  )
+                                : Column(
+                                    children: _dashboardData!.organizationSurveys!.map((survey) => _buildSurveyCard(context, survey, false, theme)).toList(),
+                                  ),
                           const SizedBox(height: 20),
 
                           _buildSectionHeader('General Surveys', _dashboardData?.availableSurveys.length ?? 0, theme),
@@ -139,16 +155,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                               padding: EdgeInsets.all(20.0),
                               child: Center(
                                 child: Text(
-                                  'No general surveys right now.',
-                                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                                  'No general surveys available right now.',
+                                  style: TextStyle( fontSize: 13),
                                 ),
                               ),
                             )
                           else
-                            ...(_dashboardData!.availableSurveys.map((survey) {
-                              return _buildSurveyCard(context, survey, false, theme);
-                            })),
-                          const SizedBox(height: 100), // Bottom Navigation Bar breathing room
+                            kIsWeb
+                                ? Wrap(
+                                    spacing: 16,
+                                    runSpacing: 0,
+                                    children: _dashboardData!.availableSurveys.map((survey) => SizedBox(width: 350, child: _buildSurveyCard(context, survey, false, theme))).toList(),
+                                  )
+                                : Column(
+                                    children: _dashboardData!.availableSurveys.map((survey) => _buildSurveyCard(context, survey, false, theme)).toList(),
+                                  ),
                         ],
                       ),
                     ),
@@ -176,181 +197,202 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final primary = orgConfig != null ? _parseHexColor(orgConfig.primaryColor, PremiumTheme.glowPurple) : PremiumTheme.glowPurple;
     final secondary = orgConfig != null ? _parseHexColor(orgConfig.secondaryColor, PremiumTheme.glowMagenta) : PremiumTheme.glowMagenta;
 
-    // CRED/Stripe inspired credit card gradient
-    final gradient = LinearGradient(
-      colors: [
-        primary,
-        secondary,
-      ],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
-
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: gradient,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
         boxShadow: [
           BoxShadow(
-            color: primary.withOpacity(0.3),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: primary.withOpacity(0.12),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // Holographic stripe look
-          Positioned(
-            right: -20,
-            bottom: -20,
-            child: Icon(
-              Icons.stars,
-              size: 140,
-              color: Colors.white.withOpacity(0.08),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // Top highlight gradient line
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 4,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primary, secondary],
+                  ),
+                ),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Metallic chip look
-                    Container(
-                      height: 32,
-                      width: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.sim_card, color: Colors.white70, size: 20),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.verified, color: Colors.white, size: 13),
-                          SizedBox(width: 4),
-                          Text(
-                            'Member',
-                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  orgName.toUpperCase(),
-                  style: GoogleFonts.plusJakartaSans(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  welcomeMsg,
-                  style: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Reward points badge
-                    InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const RedeemRewardsPage(),
-                          ),
-                        ).then((_) => _loadData());
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            // Background ambient glow
+            Positioned(
+              right: -30,
+              bottom: -30,
+              child: Icon(
+                Icons.stars,
+                size: 140,
+                color: primary.withOpacity(0.04),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Metallic chip look
+                      Container(
+                        height: 32,
+                        width: 42,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                          
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        child: Center(
+                          child: Icon(Icons.sim_card, color: primary.withOpacity(0.4), size: 20),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: primary.withOpacity(0.2)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.stars, color: Colors.white, size: 15),
-                            const SizedBox(width: 8),
+                            Icon(Icons.verified, color: primary, size: 13),
+                            const SizedBox(width: 4),
                             Text(
-                              '$rewardPoints PTS',
-                              style: GoogleFonts.plusJakartaSans(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
+                              'Member',
+                              style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    orgName.toUpperCase(),
+                    style: GoogleFonts.plusJakartaSans(
+                      
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
-                    // Wallet details redirect
-                    InkWell(
-                      onTap: () {
-                        final profile = ref.read(authProvider).profile;
-                        if (profile != null) {
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    welcomeMsg,
+                    style: GoogleFonts.inter(
+                      
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Reward points badge
+                      InkWell(
+                        onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => AdminUserDetailPage(userId: profile.id),
+                              builder: (context) => const RedeemRewardsPage(),
                             ),
                           ).then((_) => _loadData());
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.account_balance_wallet, color: Colors.white, size: 15),
-                            const SizedBox(width: 8),
-                            Text(
-                              'WALLET',
-                              style: GoogleFonts.plusJakartaSans(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: primary.withOpacity(0.25)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: primary.withOpacity(0.1),
+                                blurRadius: 10,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.stars, color: primary, size: 15),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$rewardPoints PTS',
+                                style: GoogleFonts.plusJakartaSans(
+                                  
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      // Wallet details redirect
+                      InkWell(
+                        onTap: () {
+                          final profile = ref.read(authProvider).profile;
+                          if (profile != null) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => AdminUserDetailPage(userId: profile.id),
+                              ),
+                            ).then((_) => _loadData());
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: secondary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: secondary.withOpacity(0.25)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: secondary.withOpacity(0.1),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.person_outline, color: secondary, size: 15),
+                              const SizedBox(width: 8),
+                              Text(
+                                'ACCOUNT',
+                                style: GoogleFonts.plusJakartaSans(
+                                  
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -364,7 +406,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
         Container(
@@ -404,7 +445,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               children: [
                 CircularProgressIndicator(
                   value: percent,
-                  backgroundColor: Colors.white.withOpacity(0.04),
+                  backgroundColor: Colors.white.withOpacity(0.08),
                   valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                   strokeWidth: 5,
                 ),
@@ -413,7 +454,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   style: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
-                    color: Colors.white,
                   ),
                 ),
               ],
@@ -429,7 +469,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   style: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -437,7 +476,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   'Completed $completed of $total total available tasks.',
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: Colors.white60,
                   ),
                 ),
               ],
@@ -474,7 +512,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
                       ),
                     ),
                     if (survey.description != null) ...[
@@ -484,7 +521,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
-                          color: Colors.white60,
+                          
                           fontSize: 12,
                         ),
                       ),
@@ -520,7 +557,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
                   if (!isCompleted) ...[
                     const SizedBox(height: 10),
-                    const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.white30),
+                    const Icon(Icons.arrow_forward_ios, size: 12),
                   ],
                 ],
               ),
@@ -532,50 +569,83 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 }
 
-class AdCarousel extends StatefulWidget {
+class AdCarousel extends ConsumerStatefulWidget {
   final ThemeData theme;
   const AdCarousel({super.key, required this.theme});
 
   @override
-  State<AdCarousel> createState() => _AdCarouselState();
+  ConsumerState<AdCarousel> createState() => _AdCarouselState();
 }
 
-class _AdCarouselState extends State<AdCarousel> {
+class _AdCarouselState extends ConsumerState<AdCarousel> {
   late PageController _pageController;
   int _currentPage = 0;
   Timer? _timer;
-
-  final List<Map<String, String>> _ads = [
-    {
-      'type': 'image',
-      'title': 'Tiwari Market Super Sale',
-      'desc': 'Get up to 50% discount on groceries and home essentials this week!',
-      'image': 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600',
-    },
-    {
-      'type': 'video',
-      'title': 'Explore Tiwari Smart Market',
-      'desc': 'Watch our video tour and experience high-quality shopping.',
-      'image': 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=600',
-    },
-    {
-      'type': 'image',
-      'title': 'Premium Smart Wear',
-      'desc': 'Track your health and surveys. Shop the new fitness gear.',
-      'image': 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?q=80&w=600',
-    },
-  ];
+  
+  List<Advertisement> _ads = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
+    _loadAds();
+  }
+
+  Future<void> _loadAds() async {
+    try {
+      final ads = await ref.read(advertisementServiceProvider).fetchAdvertisements();
+      if (mounted) {
+        if (ads.isNotEmpty) {
+          setState(() {
+            _ads = ads;
+            _isLoading = false;
+          });
+          _startAutoScroll();
+        } else {
+          // Force mock ads if backend returns an empty array for demo purposes
+          _loadMockAds();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _loadMockAds();
+      }
+    }
+  }
+
+  void _loadMockAds() {
+    setState(() {
+      _ads = [
+        Advertisement(
+          id: 'mock1',
+          type: 'image',
+          title: 'Tiwari Market Super Sale',
+          description: 'Get up to 50% discount on groceries and home essentials this week!',
+          imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600',
+          durationSeconds: 5,
+          rewardPoints: 10,
+        ),
+        Advertisement(
+          id: 'mock2',
+          type: 'video',
+          title: 'Explore Tiwari Smart Market',
+          description: 'Watch our video tour and experience high-quality shopping.',
+          imageUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=600',
+          mediaUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+          rewardPoints: 5,
+          durationSeconds: 5,
+        ),
+      ];
+      _isLoading = false;
+    });
     _startAutoScroll();
   }
 
   void _startAutoScroll() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_pageController.hasClients) {
+      if (_pageController.hasClients && _ads.isNotEmpty) {
         final nextPage = (_currentPage + 1) % _ads.length;
         _pageController.animateToPage(
           nextPage,
@@ -590,79 +660,28 @@ class _AdCarouselState extends State<AdCarousel> {
   void dispose() {
     _timer?.cancel();
     _pageController.dispose();
-    _mockVideoTimer?.cancel();
     super.dispose();
   }
 
-  bool _isPlayingAdVideo = false;
-  double _adVideoProgress = 0.0;
-  Timer? _mockVideoTimer;
-  int _countdown = 5;
-
-  void _playAdVideo(BuildContext context) {
-    setState(() {
-      _isPlayingAdVideo = true;
-      _adVideoProgress = 0.0;
-      _countdown = 5;
-    });
-
-    _timer?.cancel();
-
-    _mockVideoTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      setState(() {
-        _adVideoProgress += 0.02; // 5 seconds total (100ms * 50 = 5 seconds)
-        if (timer.tick % 10 == 0) {
-          _countdown--;
-        }
-        if (_adVideoProgress >= 1.0) {
-          _adVideoProgress = 1.0;
-          _isPlayingAdVideo = false;
-          _mockVideoTimer?.cancel();
-          _startAutoScroll();
-          _showRewardDialog(context);
-        }
-      });
-    });
-  }
-
-  void _showRewardDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161823),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Colors.white10),
+  void _onAdTap(Advertisement ad) {
+    if (ad.type == 'video') {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => VideoPlayerScreen(ad: ad),
         ),
-        title: Row(
-          children: [
-            const Icon(Icons.stars, color: Colors.amber, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              'Video Completed!',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ],
-        ),
-        content: Text(
-          'Thank you for watching the sponsored video advertisement. You have earned +5 reward points!',
-          style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Awesome',
-              style: TextStyle(color: widget.theme.colorScheme.primary, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SizedBox(height: 154, child: Center(child: CircularProgressIndicator()));
+    }
+    if (_ads.isEmpty) {
+      return const SizedBox();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -674,7 +693,6 @@ class _AdCarouselState extends State<AdCarousel> {
               style: GoogleFonts.plusJakartaSans(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Colors.white,
               ),
             ),
             Container(
@@ -701,164 +719,92 @@ class _AdCarouselState extends State<AdCarousel> {
           child: Container(
             height: 154,
             width: double.infinity,
-            color: const Color(0xFF12141C),
-            child: Stack(
-              children: [
-                if (_isPlayingAdVideo)
-                  Container(
-                    color: Colors.black,
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Opacity(
-                          opacity: 0.35,
-                          child: Image.network(
-                            _ads[1]['image']!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
+            color: Theme.of(context).colorScheme.surface,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              itemCount: _ads.length,
+              itemBuilder: (context, index) {
+                final ad = _ads[index];
+                return GestureDetector(
+                  onTap: () => _onAdTap(ad),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (ad.imageUrl != null)
+                        Image.network(
+                          ad.imageUrl!,
+                          fit: BoxFit.cover,
+                        ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.8),
+                              Colors.transparent,
+                            ],
                           ),
                         ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            CircularProgressIndicator(color: widget.theme.colorScheme.primary),
-                            const SizedBox(height: 14),
-                            Text(
-                              'Playing sponsored video...',
-                              style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Earning reward points in ${_countdown > 0 ? _countdown : 1}s',
-                              style: GoogleFonts.inter(color: Colors.white60, fontSize: 11),
-                            ),
-                          ],
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: LinearProgressIndicator(
-                            value: _adVideoProgress,
-                            backgroundColor: Colors.white12,
-                            valueColor: AlwaysStoppedAnimation<Color>(widget.theme.colorScheme.primary),
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white60),
-                            onPressed: () {
-                              _mockVideoTimer?.cancel();
-                              setState(() {
-                                _isPlayingAdVideo = false;
-                              });
-                              _startAutoScroll();
-                            },
-                          ),
-                        )
-                      ],
-                    ),
-                  )
-                else
-                  PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
-                    },
-                    itemCount: _ads.length,
-                    itemBuilder: (context, index) {
-                      final ad = _ads[index];
-                      final isVideo = ad['type'] == 'video';
-
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(
-                            ad['image']!,
-                            fit: BoxFit.cover,
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.black.withOpacity(0.8),
-                                  Colors.black.withOpacity(0.15),
-                                ],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Row(
+                            if (ad.type == 'video')
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.8),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (isVideo) ...[
-                                      const Icon(Icons.play_circle_fill, color: Colors.amber, size: 16),
-                                      const SizedBox(width: 6),
-                                    ],
+                                    const Icon(Icons.play_circle_fill, size: 14),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      ad['title']!,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
+                                      'WATCH & EARN +${ad.rewardPoints}',
+                                      style: GoogleFonts.plusJakartaSans( fontSize: 10, fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  ad['desc']!,
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isVideo)
-                            Center(
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => _playAdVideo(context),
-                                  borderRadius: BorderRadius.circular(40),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.4),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
-                                    ),
-                                    child: const Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                ),
+                              ),
+                            Text(
+                              ad.title ?? 'Advertisement',
+                              style: GoogleFonts.plusJakartaSans(
+                                
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
                             ),
-                        ],
-                      );
-                    },
+                            if (ad.description != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                ad.description!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-              ],
+                );
+              },
             ),
           ),
         ),
@@ -871,7 +817,7 @@ class _AdCarouselState extends State<AdCarousel> {
               width: _currentPage == index ? 10 : 5,
               height: 5,
               decoration: BoxDecoration(
-                color: _currentPage == index ? widget.theme.colorScheme.primary : Colors.white24,
+                color: _currentPage == index ? widget.theme.colorScheme.primary : Colors.black12,
                 borderRadius: BorderRadius.circular(2.5),
               ),
             );

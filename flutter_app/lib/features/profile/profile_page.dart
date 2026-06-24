@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/features/auth/auth_provider.dart';
 import 'package:community_survey/models/user.dart';
 import 'package:community_survey/services/auth_service.dart';
+import 'package:community_survey/services/organization_service.dart';
 import 'package:community_survey/core/theme/premium_theme.dart';
+import 'package:community_survey/core/theme/theme_controller.dart';
 import 'package:community_survey/core/widgets/glass_card.dart';
 import 'package:community_survey/core/widgets/glowing_button.dart';
+import 'package:community_survey/core/network/api_client.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ProfilePage extends ConsumerWidget {
@@ -33,13 +36,12 @@ class ProfilePage extends ConsumerWidget {
           'Profile',
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
         actions: [
           if (user != null)
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.white),
+              icon: const Icon(Icons.edit),
               tooltip: 'Edit Profile',
               onPressed: () => _showEditProfileSheet(context, user),
             ),
@@ -75,7 +77,6 @@ class ProfilePage extends ConsumerWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -108,7 +109,7 @@ class ProfilePage extends ConsumerWidget {
                       children: [
                         _buildDetailRow('Mobile', user.mobile ?? '-'),
                         _buildDivider(),
-                        _buildDetailRow('Aadhaar', user.aadhaar ?? '-'),
+                        _buildAadhaarKycRow(context, ref, user),
                         _buildDivider(),
                         _buildDetailRow("Father's Name", user.fathersName ?? '-'),
                         _buildDivider(),
@@ -129,15 +130,16 @@ class ProfilePage extends ConsumerWidget {
                         _buildDetailRow('Occupation', user.occupation ?? '-'),
                         _buildDivider(),
                         _buildDetailRow('Social Category', user.socialCategory ?? '-'),
-                        if (user.organization != null) ...[
-                          _buildDivider(),
-                          _buildDetailRow('Organization', user.organization!.organizationName),
-                        ],
+                        _buildDivider(),
+                        if (user.organization != null)
+                          _buildDetailRow('Organization', user.organization!.organizationName)
+                        else
+                          _buildJoinOrgRow(context, ref),
                       ],
                     ),
                   ),
                 ] else
-                  const Center(child: Text('User profile not loaded.', style: TextStyle(color: Colors.white38))),
+                  const Center(child: Text('User profile not loaded.')),
                 const SizedBox(height: 24),
                 
                 // Logout Button
@@ -162,6 +164,81 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
+  Widget _buildAadhaarKycRow(BuildContext context, WidgetRef ref, User user) {
+    final bool isUnverified = user.aadhaar == null || user.aadhaar!.isEmpty || user.aadhaar == '000000000000';
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Aadhaar (KYC)', style: GoogleFonts.inter(fontSize: 13)),
+          if (isUnverified)
+            ElevatedButton(
+              onPressed: () {
+                _showKycSheet(context, ref);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: PremiumTheme.glowMagenta,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                minimumSize: const Size(0, 30),
+              ),
+              child: const Text('Verify Now', style: TextStyle(fontSize: 12)),
+            )
+          else
+            Text(
+              'Verified: ****${user.aadhaar!.length > 4 ? user.aadhaar!.substring(user.aadhaar!.length - 4) : user.aadhaar}',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.greenAccent,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildJoinOrgRow(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Organization (Group)', style: GoogleFonts.inter(fontSize: 13)),
+          ElevatedButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const JoinOrganizationSheet(),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PremiumTheme.glowPurple,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              minimumSize: const Size(0, 30),
+            ),
+            child: const Text('Join Now', style: TextStyle(fontSize: 12)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showKycSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const KycVerificationSheet(),
+    );
+  }
+
   Widget _buildDetailRow(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -170,7 +247,7 @@ class ProfilePage extends ConsumerWidget {
         children: [
           Text(
             title,
-            style: GoogleFonts.inter(color: Colors.white38, fontSize: 13),
+            style: GoogleFonts.inter( fontSize: 13),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -180,7 +257,6 @@ class ProfilePage extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
-                color: Colors.white.withOpacity(0.9),
               ),
             ),
           ),
@@ -192,7 +268,6 @@ class ProfilePage extends ConsumerWidget {
   Widget _buildDivider() {
     return Divider(
       height: 1,
-      color: Colors.white.withOpacity(0.04),
     );
   }
 }
@@ -283,9 +358,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         ref.read(authProvider.notifier).setProfile(updatedUser);
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Color(0xFF161823),
-            content: Text('Profile updated successfully!', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+          SnackBar(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            content: const Text('Profile updated successfully!', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
           ),
         );
       }
@@ -312,13 +387,13 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         bottom: mediaQuery.viewInsets.bottom + 20,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF131520),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.08), width: 1),
+          top: BorderSide( width: 1),
         ),
       ),
       child: Consumer(
@@ -338,16 +413,15 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                         style: GoogleFonts.plusJakartaSans(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          color: Colors.white,
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white70),
+                        icon: const Icon(Icons.close),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
-                  const Divider(color: Colors.white10),
+                  const Divider(color: Colors.white12),
                   const SizedBox(height: 12),
                   if (_errorMessage != null) ...[
                     Container(
@@ -366,21 +440,19 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   ],
                   TextFormField(
                     controller: _fullNameController,
-                    style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       labelText: 'Full Name',
-                      prefixIcon: Icon(Icons.person, color: Colors.white54),
+                      prefixIcon: Icon(Icons.person),
                     ),
                     validator: (val) => val == null || val.isEmpty ? 'Please enter full name' : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _gender,
-                    style: const TextStyle(color: Colors.white),
-                    dropdownColor: const Color(0xFF161823),
+                    dropdownColor: Theme.of(context).colorScheme.surface,
                     decoration: const InputDecoration(
                       labelText: 'Gender',
-                      prefixIcon: Icon(Icons.people, color: Colors.white54),
+                      prefixIcon: Icon(Icons.people),
                     ),
                     items: ['Male', 'Female', 'Other']
                         .map((g) => DropdownMenuItem(value: g, child: Text(g)))
@@ -390,50 +462,45 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _addressController,
-                    style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       labelText: 'Address',
-                      prefixIcon: Icon(Icons.home, color: Colors.white54),
+                      prefixIcon: Icon(Icons.home),
                     ),
                     validator: (val) => val == null || val.isEmpty ? 'Please enter address' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _cityController,
-                    style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       labelText: 'City/Village',
-                      prefixIcon: Icon(Icons.location_city, color: Colors.white54),
+                      prefixIcon: Icon(Icons.location_city),
                     ),
                     validator: (val) => val == null || val.isEmpty ? 'Please enter city' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _stateController,
-                    style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       labelText: 'State',
-                      prefixIcon: Icon(Icons.map_outlined, color: Colors.white54),
+                      prefixIcon: Icon(Icons.map_outlined),
                     ),
                     validator: (val) => val == null || val.isEmpty ? 'Please enter state' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _districtController,
-                    style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       labelText: 'District',
-                      prefixIcon: Icon(Icons.pin_drop_outlined, color: Colors.white54),
+                      prefixIcon: Icon(Icons.pin_drop_outlined),
                     ),
                     validator: (val) => val == null || val.isEmpty ? 'Please enter district' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _pincodeController,
-                    style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       labelText: 'Pincode',
-                      prefixIcon: Icon(Icons.map, color: Colors.white54),
+                      prefixIcon: Icon(Icons.map),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (val) => val == null || val.length != 6 ? 'Please enter valid pincode' : null,
@@ -441,11 +508,10 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _education,
-                    style: const TextStyle(color: Colors.white),
-                    dropdownColor: const Color(0xFF161823),
+                    dropdownColor: Theme.of(context).colorScheme.surface,
                     decoration: const InputDecoration(
                       labelText: 'Education',
-                      prefixIcon: Icon(Icons.school, color: Colors.white54),
+                      prefixIcon: Icon(Icons.school),
                     ),
                     items: ['Under Matric', 'Matric', 'Intermediate', 'Graduate', 'Post Graduate']
                         .map((e) => DropdownMenuItem(value: e, child: Text(e)))
@@ -455,11 +521,10 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _occupation,
-                    style: const TextStyle(color: Colors.white),
-                    dropdownColor: const Color(0xFF161823),
+                    dropdownColor: Theme.of(context).colorScheme.surface,
                     decoration: const InputDecoration(
                       labelText: 'Occupation',
-                      prefixIcon: Icon(Icons.work, color: Colors.white54),
+                      prefixIcon: Icon(Icons.work),
                     ),
                     items: ['Farmer', 'Salaried', 'Self Employed', 'Student', 'Unemployed']
                         .map((o) => DropdownMenuItem(value: o, child: Text(o)))
@@ -469,11 +534,10 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _socialCategory,
-                    style: const TextStyle(color: Colors.white),
-                    dropdownColor: const Color(0xFF161823),
+                    dropdownColor: Theme.of(context).colorScheme.surface,
                     decoration: const InputDecoration(
                       labelText: 'Social Category',
-                      prefixIcon: Icon(Icons.layers, color: Colors.white54),
+                      prefixIcon: Icon(Icons.layers),
                     ),
                     items: ['General', 'OBC', 'SC', 'ST']
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -487,7 +551,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator( strokeWidth: 2),
                           )
                         : const Text('Save Changes'),
                   ),
@@ -500,3 +564,221 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     );
   }
 }
+
+class KycVerificationSheet extends ConsumerStatefulWidget {
+  const KycVerificationSheet({super.key});
+
+  @override
+  ConsumerState<KycVerificationSheet> createState() => _KycVerificationSheetState();
+}
+
+class _KycVerificationSheetState extends ConsumerState<KycVerificationSheet> {
+  final _aadhaarController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _aadhaarController.dispose();
+    super.dispose();
+  }
+
+  void _submitKyc() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final updatedUser = await ref.read(authServiceProvider).updateProfile(
+        aadhaar: _aadhaarController.text.trim(),
+      );
+      ref.read(authProvider.notifier).setProfile(updatedUser);
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Aadhaar KYC Verified Successfully!'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    return Container(
+      padding: EdgeInsets.only(
+        left: 20, right: 20, top: 20,
+        bottom: mediaQuery.viewInsets.bottom + 20,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Aadhaar KYC Verification',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            const SizedBox(height: 16),
+            if (_errorMessage != null) ...[
+              Text(_errorMessage!, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+            ],
+            TextFormField(
+              controller: _aadhaarController,
+              decoration: const InputDecoration(labelText: 'Aadhaar Number', prefixIcon: Icon(Icons.badge)),
+              keyboardType: TextInputType.number,
+              validator: (val) => val == null || val.length != 12 ? 'Please enter a valid 12-digit Aadhaar' : null,
+            ),
+            const SizedBox(height: 24),
+            GlowingButton(
+              onPressed: _isLoading ? null : _submitKyc,
+              glowColor: Colors.greenAccent,
+              child: _isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Verify Aadhaar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class JoinOrganizationSheet extends ConsumerStatefulWidget {
+  const JoinOrganizationSheet({super.key});
+
+  @override
+  ConsumerState<JoinOrganizationSheet> createState() => _JoinOrganizationSheetState();
+}
+
+class _JoinOrganizationSheetState extends ConsumerState<JoinOrganizationSheet> {
+  final _codeController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitCode() async {
+    final code = _codeController.text.trim();
+    if (code.isEmpty) {
+      setState(() => _errorMessage = 'Please enter an organization code');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final user = await ref.read(authServiceProvider).joinOrganization(code);
+      final config = await ref.read(organizationServiceProvider).fetchConfig(code);
+      
+      ref.read(themeProvider.notifier).updateBranding(config);
+      ref.read(authProvider.notifier).setProfile(user);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Successfully joined organization!')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = getApiErrorMessage(e);
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        left: 24,
+        right: 24,
+        top: 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Join Organization',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_errorMessage != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          TextField(
+            controller: _codeController,
+            decoration: const InputDecoration(
+              labelText: 'Organization Code',
+              prefixIcon: Icon(Icons.group_work_outlined),
+            ),
+            textCapitalization: TextCapitalization.characters,
+          ),
+          const SizedBox(height: 24),
+          GlowingButton(
+            onPressed: _isLoading ? () {} : _submitCode,
+            child: Text(_isLoading ? 'Verifying...' : 'Join Now'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

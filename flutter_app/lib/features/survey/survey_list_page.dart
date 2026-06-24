@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/services/survey_service.dart';
 import 'package:community_survey/models/survey.dart';
@@ -64,6 +65,8 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
     final completedOrg = _dashboardData?.completedOrganizationSurveys ?? [];
     final completedGlobal = _dashboardData?.completedSurveys ?? [];
 
+    final double topPadding = 48.0 + 16.0;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -71,7 +74,6 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
           'Surveys',
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
         bottom: PreferredSize(
@@ -79,7 +81,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
+              
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white.withOpacity(0.06)),
             ),
@@ -102,7 +104,17 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
           ),
         ),
         actions: [
-          IconButton(onPressed: _loadSurveys, icon: const Icon(Icons.refresh, color: Colors.white)),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              ),
+            )
+          else
+            IconButton(onPressed: _loadSurveys, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: PremiumMeshBackground(
@@ -132,7 +144,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
 
   Widget _buildAvailableTab(List<Survey> orgList, List<Survey> globalList, ThemeData theme) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 120, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
         _buildSectionHeader('Group Surveys', orgList.length, theme),
         const SizedBox(height: 12),
@@ -141,13 +153,21 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
             padding: EdgeInsets.all(20.0),
             child: Center(
               child: Text(
-                'No group surveys right now.',
-                style: TextStyle(color: Colors.white38, fontSize: 13),
+                'No group surveys available right now.',
+                style: TextStyle( fontSize: 13),
               ),
             ),
           )
         else
-          ...orgList.map((s) => _buildSurveyCard(s, false, theme)),
+          kIsWeb
+              ? Wrap(
+                  spacing: 16,
+                  runSpacing: 0,
+                  children: orgList.map((s) => SizedBox(width: 350, child: _buildSurveyCard(s, false, theme))).toList(),
+                )
+              : Column(
+                  children: orgList.map((s) => _buildSurveyCard(s, false, theme)).toList(),
+                ),
         const SizedBox(height: 20),
 
         _buildSectionHeader('General Surveys', globalList.length, theme),
@@ -157,20 +177,28 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
             padding: EdgeInsets.all(20.0),
             child: Center(
               child: Text(
-                'No general surveys right now.',
-                style: TextStyle(color: Colors.white38, fontSize: 13),
+                'No general surveys available right now.',
+                style: TextStyle( fontSize: 13),
               ),
             ),
           )
         else
-          ...globalList.map((s) => _buildSurveyCard(s, false, theme)),
+          kIsWeb
+              ? Wrap(
+                  spacing: 16,
+                  runSpacing: 0,
+                  children: globalList.map((s) => SizedBox(width: 350, child: _buildSurveyCard(s, false, theme))).toList(),
+                )
+              : Column(
+                  children: globalList.map((s) => _buildSurveyCard(s, false, theme)).toList(),
+                ),
       ],
     );
   }
 
   Widget _buildCompletedTab(List<Survey> orgList, List<Survey> globalList, ThemeData theme) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 120, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
         _buildSectionHeader('Completed Group Surveys', orgList.length, theme),
         const SizedBox(height: 12),
@@ -180,12 +208,20 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
             child: Center(
               child: Text(
                 'Completed group surveys will appear here.',
-                style: TextStyle(color: Colors.white38, fontSize: 13),
+                style: TextStyle( fontSize: 13),
               ),
             ),
           )
         else
-          ...orgList.map((s) => _buildSurveyCard(s, true, theme)),
+          kIsWeb
+              ? Wrap(
+                  spacing: 16,
+                  runSpacing: 0,
+                  children: orgList.map((s) => SizedBox(width: 350, child: _buildSurveyCard(s, true, theme))).toList(),
+                )
+              : Column(
+                  children: orgList.map((s) => _buildSurveyCard(s, true, theme)).toList(),
+                ),
         const SizedBox(height: 20),
 
         _buildSectionHeader('Completed General Surveys', globalList.length, theme),
@@ -196,12 +232,20 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
             child: Center(
               child: Text(
                 'Completed general surveys will appear here.',
-                style: TextStyle(color: Colors.white38, fontSize: 13),
+                style: TextStyle( fontSize: 13),
               ),
             ),
           )
         else
-          ...globalList.map((s) => _buildSurveyCard(s, true, theme)),
+          kIsWeb
+              ? Wrap(
+                  spacing: 16,
+                  runSpacing: 0,
+                  children: globalList.map((s) => SizedBox(width: 350, child: _buildSurveyCard(s, true, theme))).toList(),
+                )
+              : Column(
+                  children: globalList.map((s) => _buildSurveyCard(s, true, theme)).toList(),
+                ),
       ],
     );
   }
@@ -215,7 +259,6 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
           style: GoogleFonts.plusJakartaSans(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
         Container(
@@ -264,7 +307,6 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
                       ),
                     ),
                     if (survey.description != null) ...[
@@ -274,7 +316,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
-                          color: Colors.white60,
+                          
                           fontSize: 12,
                         ),
                       ),
@@ -310,7 +352,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
                   ),
                   if (!isCompleted) ...[
                     const SizedBox(height: 10),
-                    const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.white30),
+                    const Icon(Icons.arrow_forward_ios, size: 12),
                   ],
                 ],
               ),

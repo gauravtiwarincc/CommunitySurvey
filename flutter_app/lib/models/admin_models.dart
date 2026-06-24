@@ -197,7 +197,7 @@ class AdminUserItem {
       role: json['role'] as String? ?? 'user',
       walletBalance: json['walletBalance'] as int? ?? 0,
       rewardPoints: json['rewardPoints'] as int? ?? 0,
-      completedSurveysCount: json['completedSurveysCount'] as int? ?? 0,
+      completedSurveysCount: json['completedSurveysCount'] as int? ?? json['completedCount'] as int? ?? 0,
       createdAt: json['createdAt'] as String? ?? '',
     );
   }
@@ -225,3 +225,30 @@ class PaginationInfo {
     );
   }
 }
+
+class AdminSurveyItem {
+  final String id;
+  final String title;
+  final int rewardPoints;
+  final bool isGlobal;
+  final int completionCount;
+
+  AdminSurveyItem({
+    required this.id,
+    required this.title,
+    required this.rewardPoints,
+    required this.isGlobal,
+    required this.completionCount,
+  });
+
+  factory AdminSurveyItem.fromJson(Map<String, dynamic> json) {
+    return AdminSurveyItem(
+      id: json['_id'] as String? ?? json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      rewardPoints: json['rewardPoints'] as int? ?? 0,
+      isGlobal: json['isGlobal'] as bool? ?? false,
+      completionCount: json['completionCount'] as int? ?? 0,
+    );
+  }
+}
+

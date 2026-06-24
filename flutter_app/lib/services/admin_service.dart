@@ -7,27 +7,36 @@ import 'package:community_survey/models/user.dart';
 
 class AdminDashboardResponse {
   final bool success;
-  final int totalUsers;
-  final int totalSurveys;
-  final int activeSurveys;
+  final int totalMembers;
+  final int totalCompleted;
+  final int totalPending;
+  final int totalPointsPaid;
   final List<AdminUserItem> recentUsers;
+  final List<AdminSurveyItem> recentSurveys;
 
   AdminDashboardResponse({
     required this.success,
-    required this.totalUsers,
-    required this.totalSurveys,
-    required this.activeSurveys,
+    required this.totalMembers,
+    required this.totalCompleted,
+    required this.totalPending,
+    required this.totalPointsPaid,
     required this.recentUsers,
+    required this.recentSurveys,
   });
 
   factory AdminDashboardResponse.fromJson(Map<String, dynamic> json) {
-    var usersList = json['recentUsers'] as List? ?? [];
+    var usersList = json['members'] as List? ?? [];
+    var surveysList = json['surveys'] as List? ?? [];
+    var stats = json['stats'] as Map<String, dynamic>? ?? {};
+    
     return AdminDashboardResponse(
       success: json['success'] as bool? ?? false,
-      totalUsers: json['totalUsers'] as int? ?? 0,
-      totalSurveys: json['totalSurveys'] as int? ?? 0,
-      activeSurveys: json['activeSurveys'] as int? ?? 0,
+      totalMembers: stats['totalMembers'] as int? ?? 0,
+      totalCompleted: stats['totalCompleted'] as int? ?? 0,
+      totalPending: stats['totalPending'] as int? ?? 0,
+      totalPointsPaid: stats['totalPointsPaid'] as int? ?? 0,
       recentUsers: usersList.map((u) => AdminUserItem.fromJson(u as Map<String, dynamic>)).toList(),
+      recentSurveys: surveysList.map((s) => AdminSurveyItem.fromJson(s as Map<String, dynamic>)).toList(),
     );
   }
 }
@@ -103,6 +112,14 @@ class AdminService {
   Future<AdminUserDetailResponse> fetchUserDetail(String id) async {
     final response = await _dio.get(ApiEndpoints.adminUserDetail(id));
     return AdminUserDetailResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<bool> updateUserRole(String id, String role) async {
+    final response = await _dio.patch(
+      ApiEndpoints.adminUserRole(id),
+      data: {'role': role},
+    );
+    return response.data['success'] == true;
   }
 
   Future<List<Map<String, dynamic>>> fetchSurveyAnalytics() async {

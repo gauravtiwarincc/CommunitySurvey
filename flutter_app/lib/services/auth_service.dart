@@ -10,37 +10,19 @@ class AuthService {
 
   AuthService(this._dio);
 
-  Future<Map<String, dynamic>> requestOTP(String mobile) async {
+  Future<AuthSession> login({required String mobile, required String password}) async {
     final response = await _dio.post(
-      ApiEndpoints.sendOtp,
-      data: {'mobile': mobile},
-    );
-    final data = response.data;
-    if (data['success'] == true) {
-      return {
-        'transactionID': data['transactionId'] as String? ?? '',
-        'otp': data['otp'] as String?, // debug otp
-        'expiresIn': data['expiresIn'] as int? ?? 60,
-      };
-    } else {
-      throw Exception(data['message'] ?? 'Failed to send OTP.');
-    }
-  }
-
-  Future<AuthSession> verifyOTP(String mobile, String otp, String transactionId) async {
-    final response = await _dio.post(
-      ApiEndpoints.verifyOtp,
+      ApiEndpoints.login,
       data: {
         'mobile': mobile,
-        'otp': otp,
-        'transactionId': transactionId,
+        'password': password,
       },
     );
     final data = response.data;
     if (data['success'] == true) {
       return AuthSession.fromJson(data as Map<String, dynamic>);
     } else {
-      throw Exception(data['message'] ?? 'Invalid OTP.');
+      throw Exception(data['message'] ?? 'Login failed.');
     }
   }
 
@@ -49,9 +31,9 @@ class AuthService {
     String fathersName = '',
     required String gender,
     required String mobile,
+    required String password,
     String aadhaar = '',
     required String address,
-    required String role,
     String? organizationId,
     String? organizationName,
     String? organizationType,
@@ -71,9 +53,9 @@ class AuthService {
         'fathersName': fathersName,
         'gender': gender,
         'mobile': mobile,
-        'aadhaar': aadhaar,
+        'password': password,
+        if (aadhaar.isNotEmpty) 'aadhaar': aadhaar,
         'address': address,
-        'role': role,
         if (organizationId != null) 'organizationId': organizationId,
         if (organizationName != null) 'organizationName': organizationName,
         if (organizationType != null) 'organizationType': organizationType,
@@ -98,6 +80,7 @@ class AuthService {
   Future<User> updateProfile({
     String? fullName,
     String? gender,
+    String? aadhaar,
     String? address,
     String? state,
     String? district,
@@ -112,6 +95,7 @@ class AuthService {
       data: {
         if (fullName != null) 'fullName': fullName,
         if (gender != null) 'gender': gender,
+        if (aadhaar != null) 'aadhaar': aadhaar,
         if (address != null) 'address': address,
         if (state != null) 'state': state,
         if (district != null) 'district': district,

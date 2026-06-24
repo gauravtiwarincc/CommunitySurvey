@@ -80,7 +80,6 @@ class _OrganizationCodePageState extends ConsumerState<OrganizationCodePage> {
           'Group Setup',
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
         actions: [
@@ -129,7 +128,6 @@ class _OrganizationCodePageState extends ConsumerState<OrganizationCodePage> {
                     child: const Icon(
                       Icons.group_work_outlined,
                       size: 56,
-                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -141,7 +139,6 @@ class _OrganizationCodePageState extends ConsumerState<OrganizationCodePage> {
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
-                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -149,7 +146,7 @@ class _OrganizationCodePageState extends ConsumerState<OrganizationCodePage> {
                   'Enter the unique code provided by your administrator to load custom branding and surveys.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
-                    color: Colors.white60,
+                    
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -161,12 +158,11 @@ class _OrganizationCodePageState extends ConsumerState<OrganizationCodePage> {
                     children: [
                       TextField(
                         controller: _codeController,
-                        style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Organization Code',
                           hintText: 'e.g. T2EF1U',
                           errorText: _errorMessage,
-                          prefixIcon: const Icon(Icons.qr_code, color: Colors.white60),
+                          prefixIcon: const Icon(Icons.qr_code),
                         ),
                         textCapitalization: TextCapitalization.characters,
                       ),
@@ -177,7 +173,7 @@ class _OrganizationCodePageState extends ConsumerState<OrganizationCodePage> {
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                child: CircularProgressIndicator( strokeWidth: 2),
                               )
                             : const Text('Verify & Continue'),
                       ),

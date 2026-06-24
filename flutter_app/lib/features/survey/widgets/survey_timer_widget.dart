@@ -137,7 +137,7 @@ class _SurveyTimerWidgetState extends State<SurveyTimerWidget> {
                 const SizedBox(height: 2),
                 const Text(
                   'Submit before the timer ends to receive your reward points.',
-                  style: TextStyle(fontSize: 10, color: Colors.black54),
+                  style: TextStyle(fontSize: 10, color: Colors.white54),
                 ),
               ],
             ),

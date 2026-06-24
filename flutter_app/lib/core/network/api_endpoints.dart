@@ -1,9 +1,8 @@
 class ApiEndpoints {
-  static const String baseUrl = 'https://thesentinel.in/api';
+  static const String baseUrl = 'http://127.0.0.1:3001/api';
 
   // Auth
-  static const String sendOtp = '/auth/send-otp';
-  static const String verifyOtp = '/auth/verify-otp';
+  static const String login = '/auth/login';
   static const String register = '/auth/register';
   static const String profile = '/auth/profile';
   static const String joinOrg = '/auth/join-org';
@@ -20,7 +19,16 @@ class ApiEndpoints {
   
   static String adminUserDetail(String id) => '/admin/users/$id';
   static String adminUserStatus(String id) => '/admin/users/$id/status';
+  static String adminUserRole(String id) => '/admin/users/$id/role';
   static String adminArchiveSurvey(String id) => '/admin/surveys/$id/archive';
+
+  // Advertisements
+  static const String advertisements = '/advertisements';
+  static String advertisementView(String id) => '/advertisements/$id/view';
+
+  // Rewards
+  static const String rewardItems = '/rewards/items';
+  static const String redeemReward = '/rewards/redeem';
 
   // Participant Surveys
   static const String surveysDashboard = '/dashboard';

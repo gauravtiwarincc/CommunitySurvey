@@ -25,6 +25,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   final _fullNameController = TextEditingController();
   final _mobileController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _pincodeController = TextEditingController();
@@ -38,11 +39,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   bool _isLoading = false;
   String? _errorMessage;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _fullNameController.dispose();
     _mobileController.dispose();
+    _passwordController.dispose();
     _addressController.dispose();
     _cityController.dispose();
     _pincodeController.dispose();
@@ -58,14 +61,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     });
 
     try {
-      final session = await ref.read(authServiceProvider).register(
+      final authService = ref.read(authServiceProvider);
+      final authNotifier = ref.read(authProvider.notifier);
+      final tokenStore = ref.read(tokenStoreProvider);
+
+      final session = await authService.register(
         fullName: _fullNameController.text.trim(),
         fathersName: '',
         gender: _gender,
         mobile: _mobileController.text.trim(),
+        password: _passwordController.text.trim(),
         aadhaar: '',
         address: _addressController.text.trim(),
-        role: 'user',
         organizationId: widget.config?.id,
         organizationName: widget.config?.organizationName,
         organizationType: widget.config?.organizationType,
@@ -79,10 +86,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         city: _cityController.text.trim(),
       );
 
-      await ref.read(authProvider.notifier).setSession(session);
+      // Save token first so the interceptor can use it for getProfile()
+      await tokenStore.saveToken(session.accessToken);
+      
       // Fetch and set profile
-      final profile = await ref.read(authServiceProvider).getProfile();
-      ref.read(authProvider.notifier).setProfile(profile);
+      final profile = await authService.getProfile();
+      
+      // Update state all at once (this triggers the navigation)
+      authNotifier.setProfile(profile);
+      await authNotifier.setSession(session);
 
       ref.read(onboardingCompletedProvider.notifier).state = true;
       
@@ -140,7 +152,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           Text(
                             widget.config!.welcomeMessage ?? 'Welcome to our Group!',
                             textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white54),
                           ),
                         ],
                       ),
@@ -178,6 +190,24 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   validator: (val) => val == null || val.length < 10 ? 'Please enter valid mobile' : null,
                 ),
 
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  validator: (val) => val == null || val.length < 6 ? 'Password must be at least 6 characters' : null,
+                ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _addressController,
@@ -231,7 +261,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator( strokeWidth: 2),
                         )
                       : const Text('Submit & Register'),
                 ),

@@ -5,6 +5,9 @@ import 'package:community_survey/services/survey_service.dart';
 import 'package:community_survey/features/auth/auth_provider.dart';
 import 'package:community_survey/models/admin_models.dart';
 import 'package:community_survey/models/user.dart';
+import 'package:community_survey/core/theme/premium_theme.dart';
+import 'package:community_survey/core/widgets/glass_card.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class AdminUserDetailPage extends ConsumerStatefulWidget {
@@ -149,6 +152,47 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
     }
   }
 
+  void _toggleUserRole(String newRole) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final success = await ref.read(adminServiceProvider).updateUserRole(widget.userId, newRole);
+      if (success && mounted) {
+        await _loadUserDetail();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('User role updated to $newRole.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -158,39 +202,47 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
     final user = _userDetail?.user;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Member Details'),
+        title: Text(
+          'Member Details',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      body: _isLoading && _userDetail == null
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null && _userDetail == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(onPressed: _loadUserDetail, child: const Text('Retry')),
-                    ],
-                  ),
-                )
-              : _userDetail == null
-                  ? const Center(child: Text('User profile not found.'))
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildProfileCard(user!, isSelf, theme),
-                          const SizedBox(height: 20),
-                          _buildStatsGrid(user, theme),
-                          const SizedBox(height: 24),
-                          _buildSurveyProgressList('Completed Surveys', _userDetail!.completedSurveys, Colors.green),
-                          const SizedBox(height: 16),
-                          _buildSurveyProgressList('Pending Surveys', _userDetail!.pendingSurveys, Colors.orange),
-                        ],
-                      ),
+      body: PremiumMeshBackground(
+        child: _isLoading && _userDetail == null
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null && _userDetail == null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(_errorMessage!, style: const TextStyle(color: Colors.redAccent)),
+                        const SizedBox(height: 16),
+                        ElevatedButton(onPressed: _loadUserDetail, child: const Text('Retry')),
+                      ],
                     ),
+                  )
+                : _userDetail == null
+                    ? const Center(child: Text('User profile not found.'))
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20.0, kToolbarHeight + 20, 20.0, 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildProfileCard(user!, isSelf, theme),
+                            const SizedBox(height: 20),
+                            _buildStatsGrid(user, theme),
+                            const SizedBox(height: 24),
+                            _buildSurveyProgressList('Completed Surveys', _userDetail!.completedSurveys, Colors.greenAccent),
+                            const SizedBox(height: 16),
+                            _buildSurveyProgressList('Pending Surveys', _userDetail!.pendingSurveys, Colors.orangeAccent),
+                          ],
+                        ),
+                      ),
+      ),
     );
   }
 
@@ -216,29 +268,23 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
       }
     }
 
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              user.fullName,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            _buildDetailItem('Mobile', user.mobile),
-            _buildDetailItem('Registration Date', formattedDate),
-            if (user.state != null) _buildDetailItem('State', user.state!),
-            if (user.district != null) _buildDetailItem('District', user.district!),
-            if (user.city != null) _buildDetailItem('City/Village', user.city!),
-            const Divider(height: 24),
+    return GlassCard(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            user.fullName,
+            style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          _buildDetailItem('Mobile', user.mobile),
+          _buildDetailItem('Registration Date', formattedDate),
+          if (user.state != null) _buildDetailItem('State', user.state!),
+          if (user.district != null) _buildDetailItem('District', user.district!),
+          if (user.city != null) _buildDetailItem('City/Village', user.city!),
+          const Divider(height: 24),
+          if (!isSelf && currentRole == UserRole.superAdmin)
             Row(
               children: [
                 Expanded(
@@ -246,36 +292,68 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.isActive ? 'Account Active' : 'Account Deactivated',
+                        targetRole == UserRole.admin || targetRole == UserRole.superAdmin ? 'Admin Privileges' : 'Standard User',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: user.isActive ? Colors.green : Colors.red,
+                          color: targetRole == UserRole.admin || targetRole == UserRole.superAdmin ? Colors.purpleAccent : Colors.white70,
                         ),
                       ),
-                      Text(
-                        isSelf
-                            ? 'You cannot deactivate your own account'
-                            : (!canToggleStatus && (targetRole == UserRole.admin || targetRole == UserRole.superAdmin))
-                                ? 'Only Super Admins can toggle Admin accounts'
-                                : 'Toggle to change participant activation status',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      const Text(
+                        'Toggle to grant or revoke Admin role',
+                        style: TextStyle(fontSize: 11),
                       ),
                     ],
                   ),
                 ),
                 Switch.adaptive(
-                  value: user.isActive,
-                  activeColor: Colors.green,
-                  onChanged: (canToggleStatus && !_isLoading)
+                  value: targetRole == UserRole.admin || targetRole == UserRole.superAdmin,
+                  activeColor: Colors.purpleAccent,
+                  onChanged: (!_isLoading && targetRole != UserRole.superAdmin)
                       ? (val) {
-                          _toggleUserStatus(val);
+                          _toggleUserRole(val ? 'admin' : 'user');
                         }
                       : null,
                 ),
               ],
             ),
-          ],
-        ),
+          if (!isSelf && currentRole == UserRole.superAdmin)
+            const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.isActive ? 'Account Active' : 'Account Deactivated',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: user.isActive ? Colors.greenAccent : Colors.redAccent,
+                      ),
+                    ),
+                    Text(
+                      isSelf
+                          ? 'You cannot deactivate your own account'
+                          : (!canToggleStatus && (targetRole == UserRole.admin || targetRole == UserRole.superAdmin))
+                              ? 'Only Super Admins can toggle Admin accounts'
+                              : 'Toggle to change participant activation status',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: user.isActive,
+                activeColor: Colors.greenAccent,
+                onChanged: (canToggleStatus && !_isLoading)
+                    ? (val) {
+                        _toggleUserStatus(val);
+                      }
+                    : null,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -286,7 +364,7 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          Text(label, style: const TextStyle( fontSize: 13)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         ],
       ),
@@ -311,95 +389,79 @@ class _AdminUserDetailPageState extends ConsumerState<AdminUserDetailPage> {
   }
 
   Widget _buildStatBox(String label, String value, Color color) {
-    return Card(
-      elevation: 0,
-      color: color.withOpacity(0.06),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.12)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-            const SizedBox(height: 4),
-            Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54)),
-          ],
-        ),
+    return GlassCard(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 4),
+          Text(label, style: const TextStyle(fontSize: 11)),
+        ],
       ),
     );
   }
 
   Widget _buildSurveyProgressList(String title, List<dynamic> list, Color color) {
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.assignment_turned_in_outlined, color: color, size: 20),
-                const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (list.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Text('No surveys in this category', style: TextStyle(color: Colors.grey, fontSize: 13)),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: list.length,
-                separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (context, index) {
-                  final item = list[index];
-                  final isCompleted = item is CompletedSurveyItem;
+    return GlassCard(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.assignment_turned_in_outlined, color: color, size: 20),
+              const SizedBox(width: 8),
+              Text(title, style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (list.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text('No surveys in this category', style: TextStyle( fontSize: 13)),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: list.length,
+              separatorBuilder: (_, __) => const Divider(color: Colors.white12),
+              itemBuilder: (context, index) {
+                final item = list[index];
+                final isCompleted = item is CompletedSurveyItem;
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.title,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${item.rewardPoints} pts',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                           ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
+                          if (isCompleted)
                             Text(
-                              '${item.rewardPoints} pts',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                              DateFormat.yMMMd().format(DateTime.parse(item.completedAt)),
+                              style: const TextStyle( fontSize: 10),
                             ),
-                            if (isCompleted)
-                              Text(
-                                DateFormat.yMMMd().format(DateTime.parse(item.completedAt)),
-                                style: const TextStyle(color: Colors.grey, fontSize: 10),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-          ],
-        ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
       ),
     );
   }

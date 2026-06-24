@@ -5,27 +5,38 @@ import 'package:community_survey/core/theme/premium_theme.dart';
 
 class ThemeState {
   final OrganizationConfig? config;
-  final ThemeData themeData;
+  final ThemeData lightTheme;
+  final ThemeData darkTheme;
 
-  ThemeState({this.config, required this.themeData});
+  ThemeState({this.config, required this.lightTheme, required this.darkTheme});
 }
 
 class ThemeController extends StateNotifier<ThemeState> {
-  ThemeController() : super(ThemeState(themeData: _buildTheme(null)));
+  ThemeController() : super(_createState(null));
 
   void updateBranding(OrganizationConfig? config) {
-    state = ThemeState(config: config, themeData: _buildTheme(config));
+    state = _createState(config);
   }
 
-  static ThemeData _buildTheme(OrganizationConfig? config) {
+  static ThemeState _createState(OrganizationConfig? config) {
     final primaryColor = _parseColor(config?.primaryColor, const Color(0xFF8B5CF6));
     final secondaryColor = _parseColor(config?.secondaryColor, const Color(0xFFEC4899));
     final accentColor = _parseColor(config?.accentColor, const Color(0xFF10B981));
 
-    return PremiumTheme.buildTheme(
-      primary: primaryColor,
-      secondary: secondaryColor,
-      accent: accentColor,
+    return ThemeState(
+      config: config,
+      lightTheme: PremiumTheme.buildTheme(
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor,
+        brightness: Brightness.dark,
+      ),
+      darkTheme: PremiumTheme.buildTheme(
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor,
+        brightness: Brightness.dark,
+      ),
     );
   }
 

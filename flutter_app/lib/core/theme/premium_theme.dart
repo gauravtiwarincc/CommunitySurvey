@@ -3,110 +3,112 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PremiumTheme {
-  // Brand color palette
-  static const Color background = Color(0xFF080A0F);
-  static const Color surface = Color(0xFF12141C);
-  static const Color glassBorder = Color(0xFF22242D);
   static const Color glowPurple = Color(0xFF8B5CF6);
   static const Color glowMagenta = Color(0xFFEC4899);
   static const Color glowCyan = Color(0xFF06B6D4);
   static const Color glowGreen = Color(0xFF10B981);
 
-  // Gradient presets
-  static const LinearGradient purplePink = LinearGradient(
-    colors: [glowPurple, glowMagenta],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const LinearGradient glassGradient = LinearGradient(
-    colors: [
-      Color(0x0FFFFFFF),
-      Color(0x05FFFFFF),
-    ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static ThemeData buildTheme({Color? primary, Color? secondary, Color? accent}) {
+  static ThemeData buildTheme({
+    Color? primary,
+    Color? secondary,
+    Color? accent,
+    Brightness brightness = Brightness.dark,
+  }) {
     final seed = primary ?? glowPurple;
     final sec = secondary ?? glowMagenta;
     final acc = accent ?? glowGreen;
 
+    const bgColor = Color(0xFF0F111A);
+    const surfaceColor = Color(0xFF151822);
+    final borderColor = Colors.white.withOpacity(0.08);
+    
+    const textHeadingColor = Colors.white;
+    const textBodyColor = Colors.white70;
+    const textSmallColor = Colors.white54;
+    final hintColor = Colors.white30;
+    
+    final inputFill = Colors.white.withOpacity(0.03);
+    final inputBorder = Colors.white.withOpacity(0.08);
+
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: background,
+      brightness: Brightness.dark, // Force dark mode
+      scaffoldBackgroundColor: bgColor,
       colorScheme: ColorScheme.fromSeed(
         seedColor: seed,
         brightness: Brightness.dark,
         primary: seed,
         secondary: sec,
         tertiary: acc,
-        surface: surface,
+        surface: surfaceColor,
+        background: bgColor,
       ),
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(
-        ThemeData.dark().textTheme,
-      ).copyWith(
-        bodyLarge: GoogleFonts.inter(
-          textStyle: ThemeData.dark().textTheme.bodyLarge?.copyWith(color: Colors.white),
-        ),
-        bodyMedium: GoogleFonts.inter(
-          textStyle: ThemeData.dark().textTheme.bodyMedium?.copyWith(color: Colors.white.withOpacity(0.9)),
-        ),
-        bodySmall: GoogleFonts.inter(
-          textStyle: ThemeData.dark().textTheme.bodySmall?.copyWith(color: Colors.white60),
-        ),
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
+        titleLarge: GoogleFonts.poppins(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.bold)),
+        titleMedium: GoogleFonts.poppins(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.bold)),
+        titleSmall: GoogleFonts.poppins(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.w600)),
+        bodyLarge: GoogleFonts.inter(textStyle: const TextStyle(color: textHeadingColor)),
+        bodyMedium: GoogleFonts.inter(textStyle: const TextStyle(color: textBodyColor)),
+        bodySmall: GoogleFonts.inter(textStyle: const TextStyle(color: textSmallColor)),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.plusJakartaSans(
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.poppins(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: textHeadingColor,
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: textHeadingColor),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white.withOpacity(0.03),
+        fillColor: inputFill,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: inputBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: inputBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: seed.withOpacity(0.5), width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: seed, width: 2.0),
         ),
-        labelStyle: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
-        hintStyle: GoogleFonts.inter(color: Colors.white30, fontSize: 13),
+        labelStyle: GoogleFonts.inter(color: textSmallColor, fontSize: 14),
+        hintStyle: GoogleFonts.inter(color: hintColor, fontSize: 14),
       ),
       cardTheme: CardThemeData(
-        color: surface,
-        elevation: 0,
+        color: surfaceColor,
+        elevation: 0, 
+        shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: glassBorder),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: borderColor),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: seed,
-          foregroundColor: Colors.white,
+          foregroundColor: seed.contrastTextColor,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: GoogleFonts.plusJakartaSans(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          textStyle: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
-            fontSize: 14,
+            fontSize: 15,
           ),
         ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: borderColor,
+        thickness: 1,
+        space: 24,
       ),
     );
   }
@@ -128,64 +130,55 @@ class PremiumMeshBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = orgPrimary ?? PremiumTheme.glowPurple;
     final secondary = orgSecondary ?? PremiumTheme.glowMagenta;
-
+    
     return Stack(
       children: [
-        // Solid dark obsidian canvas
-        Container(color: PremiumTheme.background),
-        // Top Left glow spot
+        // Solid base
+        Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+        ),
+        // Glow Orb Top Left
         Positioned(
-          top: -120,
-          left: -120,
+          top: -100,
+          left: -100,
           child: Container(
-            width: 320,
-            height: 320,
+            width: 300,
+            height: 300,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: primary.withOpacity(0.12),
-            ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
-              child: Container(color: Colors.transparent),
+              color: primary.withOpacity(0.15),
             ),
           ),
         ),
-        // Bottom Right glow spot
+        // Glow Orb Bottom Right
         Positioned(
           bottom: -150,
-          right: -120,
+          right: -50,
           child: Container(
-            width: 380,
-            height: 380,
+            width: 400,
+            height: 400,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: secondary.withOpacity(0.08),
-            ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 85, sigmaY: 85),
-              child: Container(color: Colors.transparent),
+              color: secondary.withOpacity(0.12),
             ),
           ),
         ),
-        // Middle ambient spot
-        Positioned(
-          top: 300,
-          right: -80,
-          child: Container(
-            width: 250,
-            height: 250,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: primary.withOpacity(0.06),
-            ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-              child: Container(color: Colors.transparent),
+        // Heavy Blur layer to create the mesh effect
+        Positioned.fill(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+            child: Container(
+              color: Colors.transparent,
             ),
           ),
         ),
-        child,
+        // Content on top
+        Positioned.fill(child: SafeArea(bottom: false, child: child)),
       ],
     );
   }
+}
+
+extension PremiumColorExtension on Color {
+  Color get contrastTextColor => computeLuminance() > 0.5 ? Colors.black : Colors.white;
 }

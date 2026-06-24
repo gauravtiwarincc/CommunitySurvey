@@ -77,7 +77,7 @@ class _MainTabContainerState extends ConsumerState<MainTabContainer> {
         children: pages,
       ),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
         height: 68,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
@@ -97,9 +97,9 @@ class _MainTabContainerState extends ConsumerState<MainTabContainer> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: const Color(0xFF131520).withOpacity(0.85),
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.85),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.06),
+                  
                   width: 1,
                 ),
               ),

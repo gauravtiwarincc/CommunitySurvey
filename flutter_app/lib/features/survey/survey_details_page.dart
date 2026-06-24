@@ -59,7 +59,7 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
       if (!_selectedAnswers.containsKey(q.id)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF161823),
+            backgroundColor: Theme.of(context).colorScheme.surface,
             content: Text(
               'Please answer all questions. Missing: "${q.text}"',
               style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
@@ -86,10 +86,10 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF161823),
+            backgroundColor: Theme.of(context).colorScheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: Colors.white10),
+              side: const BorderSide(color: Colors.white12),
             ),
             title: Row(
               children: [
@@ -103,7 +103,7 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
             ),
             content: Text(
               'You have successfully completed this survey. +${_survey!.rewardPoints} points have been added to your account.',
-              style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+              style: GoogleFonts.inter( fontSize: 13),
             ),
             actions: [
               TextButton(
@@ -147,7 +147,6 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
           _survey?.title ?? 'Survey Detail',
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
       ),
@@ -176,7 +175,7 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
                               if (_survey!.description != null) ...[
                                 Text(
                                   _survey!.description!,
-                                  style: GoogleFonts.inter(fontSize: 14, color: Colors.white70, height: 1.5),
+                                  style: GoogleFonts.inter(fontSize: 14, height: 1.5),
                                 ),
                                 const SizedBox(height: 20),
                               ],
@@ -200,7 +199,6 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
                                           style: GoogleFonts.plusJakartaSans(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12,
-                                            color: Colors.white70,
                                           ),
                                         ),
                                         Text(
@@ -237,7 +235,7 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
                                     ? const SizedBox(
                                         height: 20,
                                         width: 20,
-                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                        child: CircularProgressIndicator( strokeWidth: 2),
                                       )
                                     : const Text('Submit Survey'),
                               ),
@@ -263,7 +261,6 @@ class _SurveyDetailsPageState extends ConsumerState<SurveyDetailsPage> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
               ),
             ),
           ),

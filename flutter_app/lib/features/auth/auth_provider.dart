@@ -44,7 +44,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> setSession(AuthSession session) async {
     await tokenStore.saveToken(session.accessToken);
-    state = AuthState(session: session, isAuthenticated: true);
+    state = state.copyWith(session: session, isAuthenticated: true);
   }
 
   void setProfile(User profile) {

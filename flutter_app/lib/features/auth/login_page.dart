@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/services/auth_service.dart';
-import 'package:community_survey/features/auth/otp_verification_page.dart';
+import 'package:community_survey/features/auth/auth_provider.dart';
 import 'package:community_survey/core/network/api_client.dart';
 import 'package:community_survey/core/theme/premium_theme.dart';
 import 'package:community_survey/core/widgets/glass_card.dart';
 import 'package:community_survey/core/widgets/glowing_button.dart';
+import 'package:community_survey/main.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:community_survey/features/auth/register_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -17,17 +19,20 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   final _mobileController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   String? _errorMessage;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _mobileController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  void _requestOTP() async {
+  void _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -35,21 +40,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _errorMessage = null;
     });
 
-    final mobile = _mobileController.text.trim();
-
     try {
-      final response = await ref.read(authServiceProvider).requestOTP(mobile);
+      final authService = ref.read(authServiceProvider);
+      final authNotifier = ref.read(authProvider.notifier);
+      final tokenStore = ref.read(tokenStoreProvider);
+
+      final session = await authService.login(
+        mobile: _mobileController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // Save token first so the interceptor can use it for getProfile()
+      await tokenStore.saveToken(session.accessToken);
+      
+      final profile = await authService.getProfile();
+      
+      // Update state all at once (this triggers the navigation)
+      authNotifier.setProfile(profile);
+      await authNotifier.setSession(session);
+
+      ref.read(onboardingCompletedProvider.notifier).state = true;
+      
       if (mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => OTPVerificationPage(
-              mobileNumber: mobile,
-              transactionID: response['transactionID'] as String,
-              debugOTP: response['otp'] as String?,
-              expiresIn: response['expiresIn'] as int,
-            ),
-          ),
-        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (e) {
       setState(() {
@@ -68,10 +81,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'Verification',
+          'Login',
           style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
       ),
@@ -102,29 +114,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ],
                         ),
                         child: const Icon(
-                          Icons.account_circle_outlined,
+                          Icons.lock_person_outlined,
                           size: 56,
-                          color: Colors.white,
                         ),
                       ),
                     ),
                     const SizedBox(height: 32),
                     Text(
-                      'Enter Mobile Number',
+                      'Welcome Back',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
-                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'We will send a 6-digit OTP to verify your account.',
+                      'Enter your mobile number and password to login.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.inter(
-                        color: Colors.white60,
                         fontSize: 14,
                         height: 1.5,
                       ),
@@ -152,11 +161,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         children: [
                           TextFormField(
                             controller: _mobileController,
-                            style: const TextStyle(color: Colors.white),
                             decoration: const InputDecoration(
                               labelText: 'Mobile Number',
                               hintText: 'e.g. 9876543210',
-                              prefixIcon: Icon(Icons.phone, color: Colors.white60),
+                              prefixIcon: Icon(Icons.phone),
                             ),
                             keyboardType: TextInputType.phone,
                             validator: (val) {
@@ -165,17 +173,52 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: (val) {
+                              if (val == null || val.isEmpty) return 'Please enter password';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 24),
                           GlowingButton(
-                            onPressed: _isLoading ? null : _requestOTP,
+                            onPressed: _isLoading ? null : _login,
                             glowColor: PremiumTheme.glowMagenta,
                             child: _isLoading
                                 ? const SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    child: CircularProgressIndicator(strokeWidth: 2),
                                   )
-                                : const Text('Send OTP'),
+                                : const Text('Login'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const RegisterPage(),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: PremiumTheme.glowMagenta,
+                            ),
+                            child: const Text('Don\'t have an account? Register here'),
                           ),
                         ],
                       ),
