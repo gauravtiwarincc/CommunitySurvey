@@ -8,6 +8,17 @@ class PremiumTheme {
   static const Color glowCyan = Color(0xFF06B6D4);
   static const Color glowGreen = Color(0xFF10B981);
 
+  static ThemeData buildAdminTheme() {
+    const primaryGold = Color(0xFFD4AF37);
+    const secondaryBlue = Color(0xFF1E293B);
+    const accentYellow = Color(0xFFFACC15);
+    const bgColor = Color(0xFF0B1120); // Deep midnight blue
+    const surfaceColor = Color(0xFF151E2E);
+    final borderColor = Colors.white.withOpacity(0.08);
+
+    return _buildCoreTheme(primaryGold, secondaryBlue, accentYellow, bgColor, surfaceColor, borderColor);
+  }
+
   static ThemeData buildTheme({
     Color? primary,
     Color? secondary,
@@ -21,7 +32,11 @@ class PremiumTheme {
     const bgColor = Color(0xFF0F111A);
     const surfaceColor = Color(0xFF151822);
     final borderColor = Colors.white.withOpacity(0.08);
-    
+
+    return _buildCoreTheme(seed, sec, acc, bgColor, surfaceColor, borderColor);
+  }
+
+  static ThemeData _buildCoreTheme(Color seed, Color sec, Color acc, Color bgColor, Color surfaceColor, Color borderColor) {
     const textHeadingColor = Colors.white;
     const textBodyColor = Colors.white70;
     const textSmallColor = Colors.white54;

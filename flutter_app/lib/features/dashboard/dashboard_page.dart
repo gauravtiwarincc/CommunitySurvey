@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:community_survey/features/dashboard/main_tab_container.dart';
 import 'package:community_survey/services/survey_service.dart';
 import 'package:community_survey/models/survey.dart';
 import 'package:community_survey/features/survey/survey_details_page.dart';
@@ -18,6 +19,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:community_survey/models/advertisement.dart';
 import 'package:community_survey/services/advertisement_service.dart';
 import 'package:community_survey/features/dashboard/video_player_screen.dart';
+import 'package:community_survey/features/context/context_provider.dart';
+import 'package:community_survey/features/profile/widgets/context_switcher.dart';
+import 'package:community_survey/models/user_context.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -59,13 +63,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(contextProvider, (previous, next) async {
+      if (previous?.activeContext?.contextId != next.activeContext?.contextId) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        _loadData();
+      }
+    });
+
     final theme = Theme.of(context);
     final themeState = ref.watch(themeProvider);
+    final contextState = ref.watch(contextProvider);
     final orgConfig = themeState.config;
     final stats = _dashboardData?.stats;
 
-    final primaryColor = orgConfig != null ? _parseHexColor(orgConfig.primaryColor, PremiumTheme.glowPurple) : PremiumTheme.glowPurple;
-    final secondaryColor = orgConfig != null ? _parseHexColor(orgConfig.secondaryColor, PremiumTheme.glowMagenta) : PremiumTheme.glowMagenta;
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
 
     final double topPadding = 16.0;
 
@@ -101,80 +113,75 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       ],
                     ),
                   )
-                : RefreshIndicator(
-                    onRefresh: _loadData,
-                    color: primaryColor,
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.only(
-                        left: 16.0,
-                        right: 16.0,
-                        top: topPadding,
-                        bottom: 100.0, // Bottom Navigation Bar breathing room
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildGroupTile(context, orgConfig, stats?.rewardPoints ?? 0, theme),
+                  : RefreshIndicator(
+                      onRefresh: _loadData,
+                      color: primaryColor,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: SingleChildScrollView(
+                          key: ValueKey(contextState.activeContext?.contextId ?? 'global'),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.only(
+                            left: 16.0,
+                            right: 16.0,
+                            top: topPadding,
+                            bottom: 100.0, // Bottom Navigation Bar breathing room
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                          _buildGroupTile(context, orgConfig, stats?.rewardPoints ?? 0, theme, contextState.activeContext),
                           const SizedBox(height: 20),
-                          _buildStatsProgress(theme, stats?.availableCount ?? 0, stats?.completedCount ?? 0),
+                          _buildStatsProgress(theme, stats?.availableCount ?? 0, stats?.completedCount ?? 0, contextState.activeContext),
                           const SizedBox(height: 20),
                           AdCarousel(theme: theme),
                           const SizedBox(height: 28),
                           
-                          // Available Sections
-                          _buildSectionHeader('Group Surveys', _dashboardData?.organizationSurveys?.length ?? 0, theme),
-                          const SizedBox(height: 12),
-                          if (_dashboardData?.organizationSurveys?.isEmpty ?? true)
-                            const GlassCard(
-                              padding: EdgeInsets.all(20.0),
-                              child: Center(
-                                child: Text(
-                                  'No group surveys available right now.',
-                                  style: TextStyle( fontSize: 13),
-                                ),
-                              ),
-                            )
-                          else
-                            kIsWeb
-                                ? Wrap(
-                                    spacing: 16,
-                                    runSpacing: 0,
-                                    children: _dashboardData!.organizationSurveys!.map((survey) => SizedBox(width: 350, child: _buildSurveyCard(context, survey, false, theme))).toList(),
-                                  )
-                                : Column(
-                                    children: _dashboardData!.organizationSurveys!.map((survey) => _buildSurveyCard(context, survey, false, theme)).toList(),
-                                  ),
-                          const SizedBox(height: 20),
+                          // Recent Surveys Section
+                          if (_dashboardData != null) ...(() {
+                            final allSurveys = [
+                              ...(_dashboardData!.organizationSurveys ?? []),
+                              ...(_dashboardData!.availableSurveys),
+                            ];
+                            if (allSurveys.isEmpty) return <Widget>[];
 
-                          _buildSectionHeader('General Surveys', _dashboardData?.availableSurveys.length ?? 0, theme),
-                          const SizedBox(height: 12),
-                          if (_dashboardData?.availableSurveys.isEmpty ?? true)
-                            const GlassCard(
-                              padding: EdgeInsets.all(20.0),
-                              child: Center(
-                                child: Text(
-                                  'No general surveys available right now.',
-                                  style: TextStyle( fontSize: 13),
+                            // Sort by createdAt descending
+                            allSurveys.sort((a, b) {
+                              final dateA = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                              final dateB = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                              return dateB.compareTo(dateA);
+                            });
+
+                            final recentSurveys = allSurveys.take(5).toList();
+
+                            return [
+                              InkWell(
+                                onTap: () => ref.read(mainTabIndexProvider.notifier).state = 1,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: _buildSectionHeader('Recent Surveys', allSurveys.length, theme),
                                 ),
                               ),
-                            )
-                          else
-                            kIsWeb
-                                ? Wrap(
-                                    spacing: 16,
-                                    runSpacing: 0,
-                                    children: _dashboardData!.availableSurveys.map((survey) => SizedBox(width: 350, child: _buildSurveyCard(context, survey, false, theme))).toList(),
-                                  )
-                                : Column(
-                                    children: _dashboardData!.availableSurveys.map((survey) => _buildSurveyCard(context, survey, false, theme)).toList(),
-                                  ),
+                              const SizedBox(height: 12),
+                              kIsWeb
+                                  ? Wrap(
+                                      spacing: 16,
+                                      runSpacing: 0,
+                                      children: recentSurveys.map((survey) => SizedBox(width: 350, child: _buildSurveyCard(context, survey, false, theme))).toList(),
+                                    )
+                                  : Column(
+                                      children: recentSurveys.map((survey) => _buildSurveyCard(context, survey, false, theme)).toList(),
+                                    ),
+                            ];
+                          })(),
                         ],
                       ),
                     ),
                   ),
-      ),
+                ),
+        ),
     );
   }
 
@@ -190,12 +197,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     }
   }
 
-  Widget _buildGroupTile(BuildContext context, OrganizationConfig? orgConfig, int rewardPoints, ThemeData theme) {
-    final orgName = orgConfig?.organizationName ?? 'Tiwari Market';
-    final welcomeMsg = orgConfig?.welcomeMessage ?? "Welcome to Tiwari Market's Group";
+  Widget _buildGroupTile(BuildContext context, OrganizationConfig? orgConfig, int rewardPoints, ThemeData theme, UserContext? activeContext) {
+    final isGroup = activeContext?.contextType == 'GROUP';
+    final orgName = isGroup ? (activeContext?.displayName ?? 'Group') : (orgConfig?.organizationName ?? 'Tiwari Market');
+    final welcomeMsg = isGroup ? "Welcome to ${activeContext?.displayName ?? 'Group'}" : (orgConfig?.welcomeMessage ?? "Welcome to Tiwari Market's Group");
     
-    final primary = orgConfig != null ? _parseHexColor(orgConfig.primaryColor, PremiumTheme.glowPurple) : PremiumTheme.glowPurple;
-    final secondary = orgConfig != null ? _parseHexColor(orgConfig.secondaryColor, PremiumTheme.glowMagenta) : PremiumTheme.glowMagenta;
+    final primary = theme.colorScheme.primary;
+    final secondary = theme.colorScheme.secondary;
 
     return Container(
       width: double.infinity,
@@ -428,10 +436,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildStatsProgress(ThemeData theme, int available, int completed) {
+  Widget _buildStatsProgress(ThemeData theme, int available, int completed, UserContext? activeContext) {
     final total = available + completed;
     final percent = total > 0 ? completed / total : 0.0;
     
+    final isGroup = activeContext?.contextType == 'GROUP';
+    final streakTitle = isGroup ? 'Group Participation Streak' : 'Individual Participation Streak';
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -465,7 +476,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Participation Streak',
+                  streakTitle,
                   style: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,

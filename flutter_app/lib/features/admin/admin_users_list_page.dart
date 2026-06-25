@@ -106,18 +106,24 @@ class _AdminUsersListPageState extends ConsumerState<AdminUsersListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final adminTheme = PremiumTheme.buildAdminTheme();
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Manage Members',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+    return Theme(
+      data: adminTheme,
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+
+          return Scaffold(
+            extendBodyBehindAppBar: true,
+            appBar: AppBar(
+              title: Text(
+                'Manage Members',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
       body: PremiumMeshBackground(
         child: Column(
           children: [
@@ -221,9 +227,13 @@ class _AdminUsersListPageState extends ConsumerState<AdminUsersListPage> {
                               },
                             ),
                           ),
-          ),
-        ],
-      )),
-    );
-  }
-}
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        }
+      }

@@ -9,6 +9,7 @@ import 'package:community_survey/features/admin/admin_theme_customization_page.d
 import 'package:community_survey/features/admin/admin_create_survey_page.dart';
 import 'package:community_survey/core/theme/premium_theme.dart';
 import 'package:community_survey/core/theme/theme_controller.dart';
+import 'package:community_survey/features/context/context_provider.dart';
 import 'package:community_survey/core/widgets/glass_card.dart';
 import 'package:community_survey/core/network/api_client.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -53,15 +54,21 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final adminTheme = PremiumTheme.buildAdminTheme();
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Admin Console',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.bold,
+    return Theme(
+      data: adminTheme,
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+
+          return Scaffold(
+            extendBodyBehindAppBar: true,
+            appBar: AppBar(
+              title: Text(
+                'Admin Console',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
@@ -252,12 +259,19 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ),
       ),
     );
+        },
+      ),
+    );
   }
 
   Widget _buildOrganizationShareCard(ThemeData theme) {
+    final activeContext = ref.read(contextProvider).activeContext;
     final orgConfig = ref.read(themeProvider).config;
-    final orgName = orgConfig?.organizationName ?? 'Your Organization';
-    final orgCode = orgConfig?.organizationCode ?? '------';
+    
+    // If we're in a group context, prioritize group name/code. Otherwise fallback to the global config.
+    final isGroup = activeContext?.contextType == 'GROUP';
+    final orgName = isGroup ? (activeContext?.displayName ?? 'Your Organization') : (orgConfig?.organizationName ?? 'Your Organization');
+    final orgCode = isGroup ? (activeContext?.inviteCode ?? '------') : (orgConfig?.organizationCode ?? '------');
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -309,9 +323,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               ),
               IconButton(
                 onPressed: () {
-                  if (orgConfig != null) {
-                    Share.share('Join our organization on the Community Survey app! Use Organization Code: ${orgConfig.organizationCode}');
-                  }
+                  Share.share('Join our organization on the Community Survey app! Use Organization Code: $orgCode');
                 },
                 icon: const Icon(Icons.ios_share, color: Colors.orange),
               ),

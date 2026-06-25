@@ -7,6 +7,7 @@ import 'package:community_survey/features/dashboard/dashboard_page.dart';
 import 'package:community_survey/features/survey/survey_list_page.dart';
 import 'package:community_survey/features/profile/profile_page.dart';
 import 'package:community_survey/features/admin/admin_dashboard_page.dart';
+import 'package:community_survey/features/context/context_provider.dart';
 
 class TabItem {
   final IconData icon;
@@ -27,11 +28,18 @@ class MainTabContainer extends ConsumerStatefulWidget {
   ConsumerState<MainTabContainer> createState() => _MainTabContainerState();
 }
 
+final mainTabIndexProvider = StateProvider<int>((ref) => 0);
+
 class _MainTabContainerState extends ConsumerState<MainTabContainer> {
-  int _selectedIndex = 0;
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(contextProvider.notifier).fetchContexts());
+  }
 
   @override
   Widget build(BuildContext context) {
+    final selectedIndex = ref.watch(mainTabIndexProvider);
     final authState = ref.watch(authProvider);
     final userRole = authState.profile?.role ?? UserRole.user;
     final isAdmin = userRole == UserRole.admin || userRole == UserRole.superAdmin;
@@ -73,7 +81,7 @@ class _MainTabContainerState extends ConsumerState<MainTabContainer> {
     return Scaffold(
       extendBody: true, // Allows pages to scroll behind the floating bottom bar
       body: IndexedStack(
-        index: _selectedIndex,
+        index: selectedIndex,
         children: pages,
       ),
       bottomNavigationBar: Container(
@@ -92,7 +100,7 @@ class _MainTabContainerState extends ConsumerState<MainTabContainer> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
@@ -107,10 +115,10 @@ class _MainTabContainerState extends ConsumerState<MainTabContainer> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: List.generate(items.length, (index) {
                   final item = items[index];
-                  final isSelected = _selectedIndex == index;
+                  final isSelected = selectedIndex == index;
 
                   return InkWell(
-                    onTap: () => setState(() => _selectedIndex = index),
+                    onTap: () => ref.read(mainTabIndexProvider.notifier).state = index,
                     borderRadius: BorderRadius.circular(14),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 250),

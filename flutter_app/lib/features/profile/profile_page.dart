@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/features/auth/auth_provider.dart';
+import 'package:community_survey/features/profile/widgets/context_switcher.dart';
 import 'package:community_survey/models/user.dart';
 import 'package:community_survey/services/auth_service.dart';
 import 'package:community_survey/services/organization_service.dart';
@@ -54,6 +55,7 @@ class ProfilePage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const ContextSwitcher(),
                 if (user != null) ...[
                   // Hero avatar card
                   GlassCard(

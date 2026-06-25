@@ -2,34 +2,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/models/admin_models.dart';
 import 'package:community_survey/core/theme/premium_theme.dart';
+import 'package:community_survey/models/user_context.dart';
+import 'package:community_survey/features/context/context_provider.dart';
 
 class ThemeState {
   final OrganizationConfig? config;
+  final UserContext? activeContext;
+  final bool isAdminMode;
   final ThemeData lightTheme;
   final ThemeData darkTheme;
 
-  ThemeState({this.config, required this.lightTheme, required this.darkTheme});
+  ThemeState({this.config, this.activeContext, this.isAdminMode = false, required this.lightTheme, required this.darkTheme});
 }
 
 class ThemeController extends StateNotifier<ThemeState> {
-  ThemeController() : super(_createState(null));
+  ThemeController() : super(_createState(null, null, false));
 
   void updateBranding(OrganizationConfig? config) {
-    state = _createState(config);
+    state = _createState(config, state.activeContext, state.isAdminMode);
   }
 
-  static ThemeState _createState(OrganizationConfig? config) {
-    final primaryColor = _parseColor(config?.primaryColor, const Color(0xFF8B5CF6));
-    final secondaryColor = _parseColor(config?.secondaryColor, const Color(0xFFEC4899));
-    final accentColor = _parseColor(config?.accentColor, const Color(0xFF10B981));
+  void updateContextBranding(UserContext? context) {
+    state = _createState(state.config, context, state.isAdminMode);
+  }
+  
+  void setAdminMode(bool isActive) {
+    if (state.isAdminMode != isActive) {
+      state = _createState(state.config, state.activeContext, isActive);
+    }
+  }
+
+  static ThemeState _createState(OrganizationConfig? config, UserContext? context, bool isAdminMode) {
+    Color primaryColor;
+    Color secondaryColor;
+    Color accentColor;
+
+    if (isAdminMode) {
+      // Midnight Blue & Gold for Admin Console
+      primaryColor = const Color(0xFFD4AF37); // Gold
+      secondaryColor = const Color(0xFF1E293B); // Midnight Blue
+      accentColor = const Color(0xFFFACC15); // Accent Gold
+    } else if (context != null && context.contextType == 'GROUP') {
+      // Group White-labeling
+      primaryColor = _parseColor(context.primaryColor ?? config?.primaryColor, const Color(0xFF8B5CF6));
+      secondaryColor = _parseColor(context.secondaryColor ?? config?.secondaryColor, const Color(0xFFEC4899));
+      accentColor = _parseColor(config?.accentColor, const Color(0xFF10B981));
+    } else {
+      // Base/Profile Mode (Swiggy inspired default: Vibrant Orange)
+      primaryColor = const Color(0xFFFC8019); // Swiggy Orange
+      secondaryColor = const Color(0xFF282C3F); // Dark slate
+      accentColor = const Color(0xFF60B246); // Success Green
+    }
 
     return ThemeState(
       config: config,
+      activeContext: context,
+      isAdminMode: isAdminMode,
       lightTheme: PremiumTheme.buildTheme(
         primary: primaryColor,
         secondary: secondaryColor,
         accent: accentColor,
-        brightness: Brightness.dark,
+        brightness: Brightness.dark, // Defaulting everything to dark mode for Cred-like sleekness
       ),
       darkTheme: PremiumTheme.buildTheme(
         primary: primaryColor,

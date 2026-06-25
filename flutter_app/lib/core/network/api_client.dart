@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:community_survey/core/network/api_endpoints.dart';
 import 'package:community_survey/features/auth/auth_provider.dart';
+import 'package:community_survey/core/storage/token_store.dart';
+import 'package:community_survey/features/context/context_provider.dart';
 
 class AuthInterceptor extends Interceptor {
   final Ref ref;
@@ -19,6 +21,27 @@ class AuthInterceptor extends Interceptor {
         options.headers['Authorization'] = 'Bearer $token';
       }
     }
+
+    // Attach Context Headers if available
+    try {
+      final contextState = ref.read(contextProvider);
+      final activeCtx = contextState.activeContext;
+      if (activeCtx != null) {
+        options.headers['x-context-type'] = activeCtx.contextType;
+        options.headers['x-context-id'] = activeCtx.contextId;
+      }
+    } catch (e) {
+      // If contextProvider isn't initialized yet, try falling back to TokenStore
+      final store = ref.read(tokenStoreProvider);
+      if (store is TokenStore) {
+        final ctx = await store.getActiveContext();
+        if (ctx != null) {
+          options.headers['x-context-type'] = ctx['contextType'];
+          options.headers['x-context-id'] = ctx['contextId'];
+        }
+      }
+    }
+
     handler.next(options);
   }
 

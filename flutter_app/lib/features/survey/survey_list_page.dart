@@ -8,6 +8,7 @@ import 'package:community_survey/features/survey/widgets/survey_timer_widget.dar
 import 'package:community_survey/core/theme/premium_theme.dart';
 import 'package:community_survey/core/widgets/glass_card.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:community_survey/features/context/context_provider.dart';
 
 class SurveyListPage extends ConsumerStatefulWidget {
   const SurveyListPage({super.key});
@@ -42,7 +43,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
     });
 
     try {
-      final data = await ref.read(surveyServiceProvider).fetchSurveysDashboard();
+      final data = await ref.read(surveyServiceProvider).fetchDashboard();
       if (mounted) {
         setState(() => _dashboardData = data);
       }
@@ -57,6 +58,13 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(contextProvider, (previous, next) async {
+      if (previous?.activeContext?.contextId != next.activeContext?.contextId) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        _loadSurveys();
+      }
+    });
+
     final theme = Theme.of(context);
     final activeColor = theme.colorScheme.primary;
 
@@ -146,19 +154,9 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
-        _buildSectionHeader('Group Surveys', orgList.length, theme),
-        const SizedBox(height: 12),
-        if (orgList.isEmpty)
-          const GlassCard(
-            padding: EdgeInsets.all(20.0),
-            child: Center(
-              child: Text(
-                'No group surveys available right now.',
-                style: TextStyle( fontSize: 13),
-              ),
-            ),
-          )
-        else
+        if (orgList.isNotEmpty) ...[
+          _buildSectionHeader('Group Surveys', orgList.length, theme),
+          const SizedBox(height: 12),
           kIsWeb
               ? Wrap(
                   spacing: 16,
@@ -168,21 +166,12 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
               : Column(
                   children: orgList.map((s) => _buildSurveyCard(s, false, theme)).toList(),
                 ),
-        const SizedBox(height: 20),
+          const SizedBox(height: 20),
+        ],
 
-        _buildSectionHeader('General Surveys', globalList.length, theme),
-        const SizedBox(height: 12),
-        if (globalList.isEmpty)
-          const GlassCard(
-            padding: EdgeInsets.all(20.0),
-            child: Center(
-              child: Text(
-                'No general surveys available right now.',
-                style: TextStyle( fontSize: 13),
-              ),
-            ),
-          )
-        else
+        if (globalList.isNotEmpty) ...[
+          _buildSectionHeader('General Surveys', globalList.length, theme),
+          const SizedBox(height: 12),
           kIsWeb
               ? Wrap(
                   spacing: 16,
@@ -192,6 +181,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
               : Column(
                   children: globalList.map((s) => _buildSurveyCard(s, false, theme)).toList(),
                 ),
+        ],
       ],
     );
   }
@@ -200,19 +190,9 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
-        _buildSectionHeader('Completed Group Surveys', orgList.length, theme),
-        const SizedBox(height: 12),
-        if (orgList.isEmpty)
-          const GlassCard(
-            padding: EdgeInsets.all(20.0),
-            child: Center(
-              child: Text(
-                'Completed group surveys will appear here.',
-                style: TextStyle( fontSize: 13),
-              ),
-            ),
-          )
-        else
+        if (orgList.isNotEmpty) ...[
+          _buildSectionHeader('Completed Group Surveys', orgList.length, theme),
+          const SizedBox(height: 12),
           kIsWeb
               ? Wrap(
                   spacing: 16,
@@ -222,21 +202,12 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
               : Column(
                   children: orgList.map((s) => _buildSurveyCard(s, true, theme)).toList(),
                 ),
-        const SizedBox(height: 20),
+          const SizedBox(height: 20),
+        ],
 
-        _buildSectionHeader('Completed General Surveys', globalList.length, theme),
-        const SizedBox(height: 12),
-        if (globalList.isEmpty)
-          const GlassCard(
-            padding: EdgeInsets.all(20.0),
-            child: Center(
-              child: Text(
-                'Completed general surveys will appear here.',
-                style: TextStyle( fontSize: 13),
-              ),
-            ),
-          )
-        else
+        if (globalList.isNotEmpty) ...[
+          _buildSectionHeader('Completed General Surveys', globalList.length, theme),
+          const SizedBox(height: 12),
           kIsWeb
               ? Wrap(
                   spacing: 16,
@@ -246,6 +217,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
               : Column(
                   children: globalList.map((s) => _buildSurveyCard(s, true, theme)).toList(),
                 ),
+        ],
       ],
     );
   }

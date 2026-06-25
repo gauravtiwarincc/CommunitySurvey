@@ -7,8 +7,9 @@ class ApiEndpoints {
   static const String profile = '/auth/profile';
   static const String joinOrg = '/auth/join-org';
 
-  // Config
+  // Config & Context
   static const String config = '/config';
+  static const String availableContexts = '/contexts';
 
   // Admin
   static const String adminDashboard = '/admin/dashboard';

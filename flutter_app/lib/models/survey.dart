@@ -63,6 +63,7 @@ class Survey {
   final String? organizationId;
   final List<SurveyQuestion> questions;
   final DateTime? expiresAt;
+  final DateTime? createdAt;
 
   Survey({
     required this.id,
@@ -74,6 +75,7 @@ class Survey {
     this.organizationId,
     required this.questions,
     this.expiresAt,
+    this.createdAt,
   });
 
   factory Survey.fromJson(Map<String, dynamic> json) {
@@ -102,6 +104,7 @@ class Survey {
       expiresAt: json['expiresAt'] != null
           ? DateTime.parse(json['expiresAt'] as String)
           : mockExpiresAt,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) : null,
     );
   }
 
