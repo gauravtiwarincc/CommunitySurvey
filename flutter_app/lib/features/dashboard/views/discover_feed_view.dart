@@ -16,14 +16,7 @@ class DiscoverFeedView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFE2E8F0), // Light blueish white at top
-            Color(0xFFF1F5F9), // Slate 100
-          ],
-        ),
+        color: Color(0xFF111111), // Very Dark Grey
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -39,7 +32,7 @@ class DiscoverFeedView extends ConsumerWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 8),
@@ -47,7 +40,7 @@ class DiscoverFeedView extends ConsumerWidget {
               'Watch ads and complete quick tasks to earn extra points',
               style: GoogleFonts.inter(
                 fontSize: 14,
-                color: const Color(0xFF475569),
+                color: Colors.white70,
               ),
             ),
             const SizedBox(height: 24),

@@ -16,7 +16,7 @@ class RewardsFeedView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.black, // Dineout pure black
+        color: Color(0xFF1A1A1A), // Deep Charcoal
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),

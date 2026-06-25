@@ -19,36 +19,51 @@ class SwiggyTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Premium Black & Gold Palette
+    final activeColors = {
+      SwiggyTabMode.surveys: const Color(0xFF000000), // Pure Black
+      SwiggyTabMode.discover: const Color(0xFF111111), // Very Dark Grey
+      SwiggyTabMode.rewards: const Color(0xFF1A1A1A), // Deep Charcoal
+    };
+
+    final activeColor = activeColors[selectedMode]!;
+    final goldColor = const Color(0xFFD4AF37);
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       height: 90,
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           _buildTab(
             context,
             mode: SwiggyTabMode.surveys,
             label: 'Surveys',
-            icon: Icons.assignment_turned_in, // Food proxy
-            backgroundColor: const Color(0xFF1F4D36), // Dark green background like Swiggy Food
-            activeColor: const Color(0xFF16A34A), // Vibrant green
+            icon: Icons.assignment_turned_in,
+            isActive: selectedMode == SwiggyTabMode.surveys,
+            activeBackgroundColor: activeColor,
+            inactiveBackgroundColor: Colors.black.withOpacity(0.5),
+            textColor: selectedMode == SwiggyTabMode.surveys ? goldColor : Colors.white54,
           ),
-          const SizedBox(width: 8),
           _buildTab(
             context,
             mode: SwiggyTabMode.discover,
             label: 'Discover',
-            icon: Icons.bolt, // Instamart proxy
-            backgroundColor: const Color(0xFF1E2B47), // Dark blue background
-            activeColor: const Color(0xFF2563EB), // Vibrant blue
+            icon: Icons.explore,
+            isActive: selectedMode == SwiggyTabMode.discover,
+            activeBackgroundColor: activeColor,
+            inactiveBackgroundColor: Colors.black.withOpacity(0.4),
+            textColor: selectedMode == SwiggyTabMode.discover ? goldColor : Colors.white54,
           ),
-          const SizedBox(width: 8),
           _buildTab(
             context,
             mode: SwiggyTabMode.rewards,
             label: 'Rewards',
-            icon: Icons.monetization_on, // Dineout proxy
-            backgroundColor: const Color(0xFF2A2A2A), // Dark grey
-            activeColor: const Color(0xFFD4AF37), // Gold
+            icon: Icons.workspace_premium,
+            isActive: selectedMode == SwiggyTabMode.rewards,
+            activeBackgroundColor: activeColor,
+            inactiveBackgroundColor: Colors.black.withOpacity(0.3),
+            textColor: selectedMode == SwiggyTabMode.rewards ? goldColor : Colors.white54,
           ),
         ],
       ),
@@ -60,29 +75,29 @@ class SwiggyTabBar extends StatelessWidget {
     required SwiggyTabMode mode,
     required String label,
     required IconData icon,
-    required Color backgroundColor,
-    required Color activeColor,
+    required bool isActive,
+    required Color activeBackgroundColor,
+    required Color inactiveBackgroundColor,
+    required Color textColor,
   }) {
-    final isSelected = selectedMode == mode;
-
     return Expanded(
       child: GestureDetector(
         onTap: () => onTabChanged(mode),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 200),
+          height: isActive ? 90 : 75,
           decoration: BoxDecoration(
-            color: isSelected ? activeColor : backgroundColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
-              width: 1,
+            color: isActive ? activeBackgroundColor : inactiveBackgroundColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
-            boxShadow: isSelected
+            boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: activeColor.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
                     )
                   ]
                 : [],
@@ -91,21 +106,21 @@ class SwiggyTabBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedScale(
-                scale: isSelected ? 1.1 : 1.0,
-                duration: const Duration(milliseconds: 300),
+                scale: isActive ? 1.1 : 0.9,
+                duration: const Duration(milliseconds: 200),
                 child: Icon(
                   icon,
                   size: 32,
-                  color: isSelected ? Colors.white : Colors.white70,
+                  color: textColor,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
                 label,
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 13,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                  color: textColor,
                 ),
               ),
             ],

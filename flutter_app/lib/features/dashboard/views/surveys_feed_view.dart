@@ -7,18 +7,20 @@ import 'package:google_fonts/google_fonts.dart';
 class SurveysFeedView extends ConsumerWidget {
   final List<Survey> surveys;
   final Widget Function(Survey) buildSurveyCard;
+  final Widget adCarousel;
 
   const SurveysFeedView({
     super.key,
     required this.surveys,
     required this.buildSurveyCard,
+    required this.adCarousel,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF1F4D36), // Swiggy Food green base
+        color: Color(0xFF000000), // Pure Black
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -49,15 +51,19 @@ class SurveysFeedView extends ConsumerWidget {
                   topRight: Radius.circular(24),
                 ),
               ),
-              child: ListView.builder(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.only(top: 24, left: 16, right: 16, bottom: 100),
-                itemCount: surveys.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: buildSurveyCard(surveys[index]),
-                  );
-                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    adCarousel,
+                    const SizedBox(height: 24),
+                    ...surveys.map((survey) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: buildSurveyCard(survey),
+                        )),
+                  ],
+                ),
               ),
             ),
           ),

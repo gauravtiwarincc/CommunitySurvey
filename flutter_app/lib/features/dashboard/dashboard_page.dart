@@ -22,6 +22,10 @@ import 'package:community_survey/features/dashboard/video_player_screen.dart';
 import 'package:community_survey/features/context/context_provider.dart';
 import 'package:community_survey/features/profile/widgets/context_switcher.dart';
 import 'package:community_survey/models/user_context.dart';
+import 'package:community_survey/features/dashboard/widgets/swiggy_tab_bar.dart';
+import 'package:community_survey/features/dashboard/views/surveys_feed_view.dart';
+import 'package:community_survey/features/dashboard/views/discover_feed_view.dart';
+import 'package:community_survey/features/dashboard/views/rewards_feed_view.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
@@ -29,11 +33,6 @@ class DashboardPage extends ConsumerStatefulWidget {
   @override
   ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
-
-import 'package:community_survey/features/dashboard/widgets/swiggy_tab_bar.dart';
-import 'package:community_survey/features/dashboard/views/surveys_feed_view.dart';
-import 'package:community_survey/features/dashboard/views/discover_feed_view.dart';
-import 'package:community_survey/features/dashboard/views/rewards_feed_view.dart';
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   bool _isLoading = false;
@@ -83,8 +82,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final stats = _dashboardData?.stats;
 
     // Build the sub-views with data
-    final allSurveys = _dashboardData != null 
-      ? [...(_dashboardData!.organizationSurveys ?? []), ...(_dashboardData!.availableSurveys)]
+    final List<Survey> allSurveys = _dashboardData != null 
+      ? <Survey>[...(_dashboardData!.organizationSurveys ?? []), ...(_dashboardData!.availableSurveys)]
       : <Survey>[];
     
     // Sort by createdAt descending
@@ -118,23 +117,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               ),
             ),
             
-            // Search Bar Placeholder
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GlassCard(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search, color: Colors.white54),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Search for Surveys or Tasks...',
-                      style: GoogleFonts.inter(color: Colors.white54),
-                    ),
-                  ],
-                ),
-              ),
-            ),
 
             // The Swiggy Tab Bar
             SwiggyTabBar(
@@ -171,13 +153,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildCurrentView(List<Survey> surveys, SurveyDashboardStats? stats, ThemeData theme, UserContext? activeContext, OrganizationConfig? orgConfig) {
+  Widget _buildCurrentView(List<Survey> surveys, DashboardStats? stats, ThemeData theme, UserContext? activeContext, OrganizationConfig? orgConfig) {
     switch (_currentTab) {
       case SwiggyTabMode.surveys:
         return SurveysFeedView(
           key: const ValueKey('surveys'),
           surveys: surveys,
           buildSurveyCard: (survey) => _buildSurveyCard(context, survey, false, theme),
+          adCarousel: AdCarousel(theme: theme),
         );
       case SwiggyTabMode.discover:
         return DiscoverFeedView(
