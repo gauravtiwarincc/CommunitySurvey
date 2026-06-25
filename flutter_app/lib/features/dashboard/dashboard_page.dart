@@ -30,10 +30,16 @@ class DashboardPage extends ConsumerStatefulWidget {
   ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
+import 'package:community_survey/features/dashboard/widgets/swiggy_tab_bar.dart';
+import 'package:community_survey/features/dashboard/views/surveys_feed_view.dart';
+import 'package:community_survey/features/dashboard/views/discover_feed_view.dart';
+import 'package:community_survey/features/dashboard/views/rewards_feed_view.dart';
+
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   bool _isLoading = false;
   SurveyDashboardResponse? _dashboardData;
   String? _errorMessage;
+  SwiggyTabMode _currentTab = SwiggyTabMode.surveys;
 
   @override
   void initState() {
@@ -76,113 +82,118 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final orgConfig = themeState.config;
     final stats = _dashboardData?.stats;
 
-    final primaryColor = theme.colorScheme.primary;
-    final secondaryColor = theme.colorScheme.secondary;
-
-    final double topPadding = 16.0;
+    // Build the sub-views with data
+    final allSurveys = _dashboardData != null 
+      ? [...(_dashboardData!.organizationSurveys ?? []), ...(_dashboardData!.availableSurveys)]
+      : <Survey>[];
+    
+    // Sort by createdAt descending
+    allSurveys.sort((a, b) {
+      final dateA = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final dateB = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return dateB.compareTo(dateA);
+    });
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          'Portal',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: PremiumMeshBackground(
-        orgPrimary: primaryColor,
-        orgSecondary: secondaryColor,
-        child: _isLoading && _dashboardData == null
-            ? const Center(child: CircularProgressIndicator())
-            : _errorMessage != null && _dashboardData == null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                        const SizedBox(height: 16),
-                        ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
-                      ],
-                    ),
-                  )
-                  : RefreshIndicator(
-                      onRefresh: _loadData,
-                      color: primaryColor,
-                      backgroundColor: Theme.of(context).colorScheme.surface,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: SingleChildScrollView(
-                          key: ValueKey(contextState.activeContext?.contextId ?? 'global'),
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: EdgeInsets.only(
-                            left: 16.0,
-                            right: 16.0,
-                            top: topPadding,
-                            bottom: 100.0, // Bottom Navigation Bar breathing room
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                          _buildGroupTile(context, orgConfig, stats?.rewardPoints ?? 0, theme, contextState.activeContext),
-                          const SizedBox(height: 20),
-                          _buildStatsProgress(theme, stats?.availableCount ?? 0, stats?.completedCount ?? 0, contextState.activeContext),
-                          const SizedBox(height: 20),
-                          AdCarousel(theme: theme),
-                          const SizedBox(height: 28),
-                          
-                          // Recent Surveys Section
-                          if (_dashboardData != null) ...(() {
-                            final allSurveys = [
-                              ...(_dashboardData!.organizationSurveys ?? []),
-                              ...(_dashboardData!.availableSurveys),
-                            ];
-                            if (allSurveys.isEmpty) return <Widget>[];
-
-                            // Sort by createdAt descending
-                            allSurveys.sort((a, b) {
-                              final dateA = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-                              final dateB = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-                              return dateB.compareTo(dateA);
-                            });
-
-                            final recentSurveys = allSurveys.take(5).toList();
-
-                            return [
-                              InkWell(
-                                onTap: () => ref.read(mainTabIndexProvider.notifier).state = 1,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: _buildSectionHeader('Recent Surveys', allSurveys.length, theme),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              kIsWeb
-                                  ? Wrap(
-                                      spacing: 16,
-                                      runSpacing: 0,
-                                      children: recentSurveys.map((survey) => SizedBox(width: 350, child: _buildSurveyCard(context, survey, false, theme))).toList(),
-                                    )
-                                  : Column(
-                                      children: recentSurveys.map((survey) => _buildSurveyCard(context, survey, false, theme)).toList(),
-                                    ),
-                            ];
-                          })(),
-                        ],
-                      ),
+      backgroundColor: theme.colorScheme.background,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // Top Header: Context Switcher + Profile
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  Expanded(child: const ContextSwitcher()),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => ref.read(mainTabIndexProvider.notifier).state = 2, // Go to profile tab
+                    child: CircleAvatar(
+                      backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                      child: Icon(Icons.person, color: theme.colorScheme.primary),
                     ),
                   ),
+                ],
+              ),
+            ),
+            
+            // Search Bar Placeholder
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: GlassCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: Colors.white54),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Search for Surveys or Tasks...',
+                      style: GoogleFonts.inter(color: Colors.white54),
+                    ),
+                  ],
                 ),
+              ),
+            ),
+
+            // The Swiggy Tab Bar
+            SwiggyTabBar(
+              selectedMode: _currentTab,
+              onTabChanged: (mode) => setState(() => _currentTab = mode),
+            ),
+
+            // The Tab Views
+            Expanded(
+              child: _isLoading && _dashboardData == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage != null && _dashboardData == null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                              const SizedBox(height: 16),
+                              ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _loadData,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: _buildCurrentView(allSurveys, stats, theme, contextState.activeContext, orgConfig),
+                          ),
+                        ),
+            ),
+          ],
         ),
+      ),
     );
+  }
+
+  Widget _buildCurrentView(List<Survey> surveys, SurveyDashboardStats? stats, ThemeData theme, UserContext? activeContext, OrganizationConfig? orgConfig) {
+    switch (_currentTab) {
+      case SwiggyTabMode.surveys:
+        return SurveysFeedView(
+          key: const ValueKey('surveys'),
+          surveys: surveys,
+          buildSurveyCard: (survey) => _buildSurveyCard(context, survey, false, theme),
+        );
+      case SwiggyTabMode.discover:
+        return DiscoverFeedView(
+          key: const ValueKey('discover'),
+          statsProgress: _buildStatsProgress(theme, stats?.availableCount ?? 0, stats?.completedCount ?? 0, activeContext),
+          adCarousel: AdCarousel(theme: theme),
+        );
+      case SwiggyTabMode.rewards:
+        return RewardsFeedView(
+          key: const ValueKey('rewards'),
+          groupTile: _buildGroupTile(context, orgConfig, stats?.rewardPoints ?? 0, theme, activeContext),
+          onRedeemRewards: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const RedeemRewardsPage()));
+          },
+        );
+    }
   }
 
   Color _parseHexColor(String? hexString, Color fallback) {
