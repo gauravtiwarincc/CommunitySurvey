@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PremiumTheme {
-  static const Color glowPurple = Color(0xFF8B5CF6);
-  static const Color glowMagenta = Color(0xFFEC4899);
-  static const Color glowCyan = Color(0xFF06B6D4);
-  static const Color glowGreen = Color(0xFF10B981);
+  static const Color glowGold = Color(0xFFD4AF37);
+  static const Color glowCharcoal = Color(0xFF1A1A1A);
+  static const Color glowOnyx = Color(0xFF0A0A0A);
+  static const Color glowBronze = Color(0xFFCD7F32);
 
   static ThemeData buildAdminTheme() {
     const primaryGold = Color(0xFFD4AF37);
-    const secondaryBlue = Color(0xFF1E293B);
+    const secondaryDark = Color(0xFF111111);
     const accentYellow = Color(0xFFFACC15);
-    const bgColor = Color(0xFF0B1120); // Deep midnight blue
-    const surfaceColor = Color(0xFF151E2E);
+    const bgColor = Color(0xFF000000); // Pure Black
+    const surfaceColor = Color(0xFF0A0A0A); // Onyx
     final borderColor = Colors.white.withOpacity(0.08);
 
-    return _buildCoreTheme(primaryGold, secondaryBlue, accentYellow, bgColor, surfaceColor, borderColor);
+    return _buildCoreTheme(primaryGold, secondaryDark, accentYellow, bgColor, surfaceColor, borderColor);
   }
 
   static ThemeData buildTheme({
@@ -25,12 +25,12 @@ class PremiumTheme {
     Color? accent,
     Brightness brightness = Brightness.dark,
   }) {
-    final seed = primary ?? glowPurple;
-    final sec = secondary ?? glowMagenta;
-    final acc = accent ?? glowGreen;
+    final seed = primary ?? glowGold;
+    final sec = secondary ?? glowCharcoal;
+    final acc = accent ?? glowBronze;
 
-    const bgColor = Color(0xFF0F111A);
-    const surfaceColor = Color(0xFF151822);
+    const bgColor = Color(0xFF000000); // Pure Black
+    const surfaceColor = Color(0xFF0A0A0A); // Onyx
     final borderColor = Colors.white.withOpacity(0.08);
 
     return _buildCoreTheme(seed, sec, acc, bgColor, surfaceColor, borderColor);
@@ -143,8 +143,8 @@ class PremiumMeshBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = orgPrimary ?? PremiumTheme.glowPurple;
-    final secondary = orgSecondary ?? PremiumTheme.glowMagenta;
+    final primary = orgPrimary ?? PremiumTheme.glowGold;
+    final secondary = orgSecondary ?? PremiumTheme.glowBronze;
     
     return Stack(
       children: [
@@ -161,7 +161,7 @@ class PremiumMeshBackground extends StatelessWidget {
             height: 300,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: primary.withOpacity(0.15),
+              color: primary.withOpacity(0.08), // Subtle gold glow
             ),
           ),
         ),
@@ -174,7 +174,7 @@ class PremiumMeshBackground extends StatelessWidget {
             height: 400,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: secondary.withOpacity(0.12),
+              color: secondary.withOpacity(0.05), // Subtle bronze/dark glow
             ),
           ),
         ),
