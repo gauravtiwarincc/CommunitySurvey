@@ -178,6 +178,27 @@ class PremiumMeshBackground extends StatelessWidget {
             ),
           ),
         ),
+        // Light Rays from bottom effect (Liquid Glass Enhancement)
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 350,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  primary.withOpacity(0.12), // Stronger glow at the very bottom
+                  primary.withOpacity(0.03),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.4, 1.0],
+              ),
+            ),
+          ),
+        ),
         // Heavy Blur layer to create the mesh effect
         Positioned.fill(
           child: BackdropFilter(
