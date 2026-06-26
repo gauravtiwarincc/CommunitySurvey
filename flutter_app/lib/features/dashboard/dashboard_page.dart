@@ -19,6 +19,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:community_survey/models/advertisement.dart';
 import 'package:community_survey/services/advertisement_service.dart';
 import 'package:community_survey/features/dashboard/video_player_screen.dart';
+import 'package:community_survey/features/context/context_provider.dart';
 import 'package:community_survey/models/user_context.dart';
 import 'package:community_survey/features/dashboard/widgets/swiggy_tab_bar.dart';
 import 'package:community_survey/features/dashboard/views/surveys_feed_view.dart';
