@@ -181,7 +181,7 @@ class ProfilePage extends ConsumerWidget {
                 _showKycSheet(context, ref);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: PremiumTheme.glowMagenta,
+                backgroundColor: PremiumTheme.glowBronze,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                 minimumSize: const Size(0, 30),
@@ -220,7 +220,7 @@ class ProfilePage extends ConsumerWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: PremiumTheme.glowPurple,
+              backgroundColor: PremiumTheme.glowGold,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               minimumSize: const Size(0, 30),

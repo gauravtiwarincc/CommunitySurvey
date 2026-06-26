@@ -103,11 +103,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       child: Container(
                         padding: const EdgeInsets.all(22),
                         decoration: BoxDecoration(
-                          color: PremiumTheme.glowMagenta.withOpacity(0.08),
+                          color: PremiumTheme.glowGold.withOpacity(0.08),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: PremiumTheme.glowMagenta.withOpacity(0.12),
+                              color: PremiumTheme.glowGold.withOpacity(0.12),
                               blurRadius: 40,
                               spreadRadius: 10,
                             ),
@@ -197,7 +197,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           const SizedBox(height: 24),
                           GlowingButton(
                             onPressed: _isLoading ? null : _login,
-                            glowColor: PremiumTheme.glowMagenta,
+                            glowColor: PremiumTheme.glowBronze,
                             child: _isLoading
                                 ? const SizedBox(
                                     height: 20,
@@ -216,7 +216,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               );
                             },
                             style: TextButton.styleFrom(
-                              foregroundColor: PremiumTheme.glowMagenta,
+                              foregroundColor: PremiumTheme.glowBronze,
                             ),
                             child: const Text('Don\'t have an account? Register here'),
                           ),

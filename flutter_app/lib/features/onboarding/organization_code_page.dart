@@ -115,11 +115,11 @@ class _OrganizationCodePageState extends ConsumerState<OrganizationCodePage> {
                   child: Container(
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      color: PremiumTheme.glowPurple.withOpacity(0.1),
+                      color: PremiumTheme.glowGold.withOpacity(0.1),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: PremiumTheme.glowPurple.withOpacity(0.15),
+                          color: PremiumTheme.glowBronze.withOpacity(0.15),
                           blurRadius: 40,
                           spreadRadius: 10,
                         ),

@@ -19,8 +19,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:community_survey/models/advertisement.dart';
 import 'package:community_survey/services/advertisement_service.dart';
 import 'package:community_survey/features/dashboard/video_player_screen.dart';
-import 'package:community_survey/features/context/context_provider.dart';
-import 'package:community_survey/features/profile/widgets/context_switcher.dart';
 import 'package:community_survey/models/user_context.dart';
 import 'package:community_survey/features/dashboard/widgets/swiggy_tab_bar.dart';
 import 'package:community_survey/features/dashboard/views/surveys_feed_view.dart';
@@ -99,23 +97,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         bottom: false,
         child: Column(
           children: [
-            // Top Header: Context Switcher + Profile
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
-                children: [
-                  Expanded(child: const ContextSwitcher()),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => ref.read(mainTabIndexProvider.notifier).state = 2, // Go to profile tab
-                    child: CircleAvatar(
-                      backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
-                      child: Icon(Icons.person, color: theme.colorScheme.primary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+
             
 
             // The Swiggy Tab Bar
