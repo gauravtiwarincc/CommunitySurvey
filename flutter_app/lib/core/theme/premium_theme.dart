@@ -154,14 +154,27 @@ class PremiumMeshBackground extends StatelessWidget {
         ),
         // Glow Orb Top Left
         Positioned(
-          top: -100,
+          top: -150,
           left: -100,
+          child: Container(
+            width: 450,
+            height: 450,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: primary.withOpacity(0.20), // Stronger gold glow
+            ),
+          ),
+        ),
+        // Glow Orb Top Right (Added for more glow)
+        Positioned(
+          top: -50,
+          right: -100,
           child: Container(
             width: 300,
             height: 300,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: primary.withOpacity(0.08), // Subtle gold glow
+              color: primary.withOpacity(0.15), // Stronger gold glow
             ),
           ),
         ),
@@ -170,11 +183,11 @@ class PremiumMeshBackground extends StatelessWidget {
           bottom: -150,
           right: -50,
           child: Container(
-            width: 400,
-            height: 400,
+            width: 500,
+            height: 500,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: secondary.withOpacity(0.05), // Subtle bronze/dark glow
+              color: secondary.withOpacity(0.15), // Stronger charcoal/bronze glow
             ),
           ),
         ),
@@ -183,18 +196,18 @@ class PremiumMeshBackground extends StatelessWidget {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 350,
+          height: 400,
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  primary.withOpacity(0.12), // Stronger glow at the very bottom
-                  primary.withOpacity(0.03),
+                  primary.withOpacity(0.20), // Stronger bottom light ray
+                  primary.withOpacity(0.05),
                   Colors.transparent,
                 ],
-                stops: const [0.0, 0.4, 1.0],
+                stops: const [0.0, 0.5, 1.0],
               ),
             ),
           ),

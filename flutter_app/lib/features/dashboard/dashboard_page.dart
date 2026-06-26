@@ -94,10 +94,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
+      body: PremiumMeshBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
 
             
 
