@@ -19,9 +19,9 @@ class SurveysFeedView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF000000), // Pure Black
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.5), // Translucent black to reveal background glow
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),

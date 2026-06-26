@@ -17,13 +17,24 @@ class SwiggyTabBar extends StatelessWidget {
     required this.onTabChanged,
   });
 
+  Color _getInactiveBackgroundColor(SwiggyTabMode mode) {
+    switch (mode) {
+      case SwiggyTabMode.surveys:
+        return Colors.black.withOpacity(0.5);
+      case SwiggyTabMode.discover:
+        return Colors.black.withOpacity(0.55);
+      case SwiggyTabMode.rewards:
+        return Colors.black.withOpacity(0.6);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Premium Black & Gold Palette
     final activeColors = {
-      SwiggyTabMode.surveys: const Color(0xFF000000), // Pure Black
-      SwiggyTabMode.discover: const Color(0xFF111111), // Very Dark Grey
-      SwiggyTabMode.rewards: const Color(0xFF1A1A1A), // Deep Charcoal
+      SwiggyTabMode.surveys: Colors.black.withOpacity(0.5), // Translucent to reveal background
+      SwiggyTabMode.discover: Colors.black.withOpacity(0.55),
+      SwiggyTabMode.rewards: Colors.black.withOpacity(0.6),
     };
 
     final activeColor = activeColors[selectedMode]!;
