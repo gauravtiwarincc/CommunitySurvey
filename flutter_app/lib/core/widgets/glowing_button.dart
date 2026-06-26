@@ -53,8 +53,8 @@ class _GlowingButtonState extends State<GlowingButton> with SingleTickerProvider
         primary,
         theme.colorScheme.secondary,
       ],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
     );
 
     return GestureDetector(
@@ -72,9 +72,10 @@ class _GlowingButtonState extends State<GlowingButton> with SingleTickerProvider
             boxShadow: isEnabled
                 ? [
                     BoxShadow(
-                      color: primary.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      color: primary.withOpacity(0.25),
+                      blurRadius: 30,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 10),
                     ),
                   ]
                 : null,

@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PremiumTheme {
-  static const Color glowGold = Color(0xFFD4AF37);
-  static const Color glowCharcoal = Color(0xFF1A1A1A);
+  static const Color glowGold = Color(0xFFC57D3E); // Warm Amber/Gold
+  static const Color glowCharcoal = Color(0xFF393A48); // Muted Charcoal Blue
   static const Color glowOnyx = Color(0xFF0A0A0A);
   static const Color glowBronze = Color(0xFFCD7F32);
 
   static ThemeData buildAdminTheme() {
-    const primaryGold = Color(0xFFD4AF37);
-    const secondaryDark = Color(0xFF111111);
+    const primaryGold = Color(0xFFC57D3E);
+    const secondaryDark = Color(0xFF393A48);
     const accentYellow = Color(0xFFFACC15);
     const bgColor = Color(0xFF000000); // Pure Black
     const surfaceColor = Color(0xFF0A0A0A); // Onyx
-    final borderColor = Colors.white.withOpacity(0.08);
+    final borderColor = Colors.white.withOpacity(0.04);
 
     return _buildCoreTheme(primaryGold, secondaryDark, accentYellow, bgColor, surfaceColor, borderColor);
   }
@@ -42,8 +42,8 @@ class PremiumTheme {
     const textSmallColor = Colors.white54;
     final hintColor = Colors.white30;
     
-    final inputFill = Colors.white.withOpacity(0.03);
-    final inputBorder = Colors.white.withOpacity(0.08);
+    final inputFill = const Color(0xFF111111); // Dark charcoal input
+    final inputBorder = Colors.transparent;
 
     return ThemeData(
       useMaterial3: true,
@@ -82,7 +82,7 @@ class PremiumTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: inputFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: inputBorder),
@@ -93,7 +93,7 @@ class PremiumTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: seed, width: 2.0),
+          borderSide: BorderSide(color: seed.withOpacity(0.5), width: 1.0),
         ),
         labelStyle: GoogleFonts.inter(color: textSmallColor, fontSize: 14),
         hintStyle: GoogleFonts.inter(color: hintColor, fontSize: 14),

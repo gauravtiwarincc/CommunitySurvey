@@ -197,7 +197,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           const SizedBox(height: 24),
                           GlowingButton(
                             onPressed: _isLoading ? null : _login,
-                            glowColor: PremiumTheme.glowBronze,
+                            glowColor: PremiumTheme.glowGold,
                             child: _isLoading
                                 ? const SizedBox(
                                     height: 20,
@@ -216,7 +216,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               );
                             },
                             style: TextButton.styleFrom(
-                              foregroundColor: PremiumTheme.glowBronze,
+                              foregroundColor: PremiumTheme.glowGold,
                             ),
                             child: const Text('Don\'t have an account? Register here'),
                           ),
