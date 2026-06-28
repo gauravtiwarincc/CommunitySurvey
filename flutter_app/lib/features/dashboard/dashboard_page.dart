@@ -110,31 +110,41 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
             // The Tab Views
             Expanded(
-              child: _isLoading && _dashboardData == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : _errorMessage != null && _dashboardData == null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                              const SizedBox(height: 16),
-                              ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
-                            ],
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.65), // Consistent global translucent overlay
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: _isLoading && _dashboardData == null
+                    ? _buildSkeletonLoader(theme)
+                    : _errorMessage != null && _dashboardData == null
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                                const SizedBox(height: 16),
+                                ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: _buildCurrentView(allSurveys, stats, theme, contextState.activeContext, orgConfig),
+                            ),
                           ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _loadData,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: _buildCurrentView(allSurveys, stats, theme, contextState.activeContext, orgConfig),
-                          ),
-                        ),
+              ),
             ),
           ],
         ),
       ),
-    );
+    ), // Close PremiumMeshBackground
+    ); // Close Scaffold
   }
 
   Widget _buildCurrentView(List<Survey> surveys, DashboardStats? stats, ThemeData theme, UserContext? activeContext, OrganizationConfig? orgConfig) {
@@ -163,6 +173,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     }
   }
 
+  Widget _buildSkeletonLoader(ThemeData theme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 24, left: 16, right: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: List.generate(4, (index) => Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: Container(
+            height: 140,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.04), // Dark semi-transparent skeleton
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+        )),
+      ),
+    );
+  }
+
   Color _parseHexColor(String? hexString, Color fallback) {
     if (hexString == null || hexString.isEmpty) return fallback;
     try {
@@ -177,8 +206,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   Widget _buildGroupTile(BuildContext context, OrganizationConfig? orgConfig, int rewardPoints, ThemeData theme, UserContext? activeContext) {
     final isGroup = activeContext?.contextType == 'GROUP';
-    final orgName = isGroup ? (activeContext?.displayName ?? 'Group') : (orgConfig?.organizationName ?? 'Tiwari Market');
-    final welcomeMsg = isGroup ? "Welcome to ${activeContext?.displayName ?? 'Group'}" : (orgConfig?.welcomeMessage ?? "Welcome to Tiwari Market's Group");
+    final orgName = isGroup ? (activeContext?.displayName ?? 'Group') : (orgConfig?.organizationName ?? 'Community Survey');
+    final welcomeMsg = isGroup ? "Welcome to ${activeContext?.displayName ?? 'Group'}" : (orgConfig?.welcomeMessage ?? "Welcome to the Community");
     
     final primary = theme.colorScheme.primary;
     final secondary = theme.colorScheme.secondary;
@@ -609,8 +638,8 @@ class _AdCarouselState extends ConsumerState<AdCarousel> {
         Advertisement(
           id: 'mock1',
           type: 'image',
-          title: 'Tiwari Market Super Sale',
-          description: 'Get up to 50% discount on groceries and home essentials this week!',
+          title: 'Premium Survey Sale',
+          description: 'Get up to 50% extra points on featured surveys this week!',
           imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=600',
           durationSeconds: 5,
           rewardPoints: 10,
@@ -618,7 +647,7 @@ class _AdCarouselState extends ConsumerState<AdCarousel> {
         Advertisement(
           id: 'mock2',
           type: 'video',
-          title: 'Explore Tiwari Smart Market',
+          title: 'Explore Premium Rewards',
           description: 'Watch our video tour and experience high-quality shopping.',
           imageUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=600',
           mediaUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',

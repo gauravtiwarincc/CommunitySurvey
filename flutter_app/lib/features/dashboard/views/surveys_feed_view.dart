@@ -19,25 +19,18 @@ class SurveysFeedView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5), // Translucent black to reveal background glow
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          Center(
             child: Text(
-              'Available Surveys near you',
+              'AVAILABLE SURVEYS',
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 18,
+                fontSize: 16,
+                letterSpacing: 4.0,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: const Color(0xFFD4AF37), // Gold
               ),
             ),
           ),

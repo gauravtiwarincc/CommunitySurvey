@@ -15,13 +15,6 @@ class RewardsFeedView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6), // Translucent to reveal background glow
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.only(top: 24, left: 16, right: 16, bottom: 100),
         child: Column(

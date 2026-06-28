@@ -15,32 +15,31 @@ class DiscoverFeedView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55), // Translucent to reveal background glow
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.only(top: 24, left: 16, right: 16, bottom: 100),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Discover & Earn',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            Center(
+              child: Text(
+                'DISCOVER & EARN',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  letterSpacing: 4.0,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFFD4AF37), // Gold
+                ),
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              'Watch ads and complete quick tasks to earn extra points',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: Colors.white70,
+            Center(
+              child: Text(
+                'Watch ads and complete quick tasks to earn extra points',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
               ),
             ),
             const SizedBox(height: 24),

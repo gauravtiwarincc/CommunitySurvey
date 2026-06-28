@@ -1,5 +1,5 @@
 class ApiEndpoints {
-  static const String baseUrl = 'http://127.0.0.1:3001/api';
+  static const String baseUrl = 'https://thesentinel.in/api'; // Remote live server
 
   // Auth
   static const String login = '/auth/login';
