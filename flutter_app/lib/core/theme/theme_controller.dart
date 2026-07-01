@@ -39,19 +39,19 @@ class ThemeController extends StateNotifier<ThemeState> {
 
     if (isAdminMode) {
       // Midnight Blue & Gold for Admin Console
-      primaryColor = const Color(0xFFD4AF37); // Gold
-      secondaryColor = const Color(0xFF1E293B); // Midnight Blue
-      accentColor = const Color(0xFFFACC15); // Accent Gold
+      primaryColor = const Color(0xFFD4AF37); // Rich Gold
+      secondaryColor = const Color(0xFF131313); // Deep Charcoal
+      accentColor = const Color(0xFFD4AF37); // Rich Gold
     } else if (context != null && context.contextType == 'GROUP') {
       // Group White-labeling
       primaryColor = _parseColor(context.primaryColor ?? config?.primaryColor, const Color(0xFF8B5CF6));
       secondaryColor = _parseColor(context.secondaryColor ?? config?.secondaryColor, const Color(0xFFEC4899));
       accentColor = _parseColor(config?.accentColor, const Color(0xFF10B981));
     } else {
-      // Base/Profile Mode (Swiggy inspired default: Vibrant Orange)
-      primaryColor = const Color(0xFFFC8019); // Swiggy Orange
-      secondaryColor = const Color(0xFF282C3F); // Dark slate
-      accentColor = const Color(0xFF60B246); // Success Green
+      // Base/Profile Mode matching Figma
+      primaryColor = const Color(0xFFD4AF37); // Rich Gold
+      secondaryColor = const Color(0xFF131313); // Deep Charcoal
+      accentColor = const Color(0xFFD4AF37); // Rich Gold
     }
 
     return ThemeState(

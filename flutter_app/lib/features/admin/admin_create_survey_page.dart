@@ -131,14 +131,24 @@ class _AdminCreateSurveyPageState extends ConsumerState<AdminCreateSurveyPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final goldColor = const Color(0xFFD4AF37);
+    final charcoal = const Color(0xFF131313);
+    final cardColor = const Color(0xFF1A1A1A);
     
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: charcoal,
       appBar: AppBar(
-        title: Text(
-          'Create Survey',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+        backgroundColor: charcoal,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: goldColor),
+          onPressed: () => Navigator.pop(context),
         ),
+        title: Text(
+          'Add Mission',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
       ),
       body: PremiumMeshBackground(
         child: SafeArea(
@@ -164,61 +174,66 @@ class _AdminCreateSurveyPageState extends ConsumerState<AdminCreateSurveyPage> {
                       ),
                     ),
                   
-                  GlassCard(
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Survey Details',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 18,
+                          'MISSION DETAILS',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                            color: Colors.white54,
                           ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildAuraTextField(
+                          controller: _titleController,
+                          label: 'TITLE',
+                          icon: Icons.title,
+                          goldColor: goldColor,
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _titleController,
-                          decoration: const InputDecoration(
-                            labelText: 'Survey Title',
-                            prefixIcon: Icon(Icons.title),
-                          ),
-                          validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
+                        _buildAuraTextField(
                           controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Description (Optional)',
-                            prefixIcon: Icon(Icons.description),
-                          ),
+                          label: 'DESCRIPTION (OPTIONAL)',
+                          icon: Icons.description,
                           maxLines: 2,
+                          goldColor: goldColor,
                         ),
-                        const SizedBox(height: 12),
-                        TextFormField(
+                        const SizedBox(height: 16),
+                        _buildAuraTextField(
                           controller: _pointsController,
-                          decoration: const InputDecoration(
-                            labelText: 'Reward Points',
-                            prefixIcon: Icon(Icons.stars),
-                          ),
+                          label: 'REWARD POINTS',
+                          icon: Icons.stars,
                           keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return 'Required';
-                            if (int.tryParse(value) == null) return 'Must be a number';
-                            return null;
-                          },
+                          goldColor: goldColor,
                         ),
                       ],
                     ),
                   ),
                   
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   
                   ..._questions.asMap().entries.map((entry) {
                     final index = entry.key;
                     final question = entry.value;
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: GlassCard(
+                      padding: const EdgeInsets.only(bottom: 24.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -226,9 +241,12 @@ class _AdminCreateSurveyPageState extends ConsumerState<AdminCreateSurveyPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Question ${index + 1}',
-                                  style: GoogleFonts.plusJakartaSans(
+                                  'QUESTION ${index + 1}',
+                                  style: GoogleFonts.montserrat(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    letterSpacing: 1.5,
+                                    color: Colors.white54,
                                   ),
                                 ),
                                 if (_questions.length > 1)
@@ -238,38 +256,33 @@ class _AdminCreateSurveyPageState extends ConsumerState<AdminCreateSurveyPage> {
                                   ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: question.controller,
-                              decoration: const InputDecoration(
-                                labelText: 'Question Text',
-                                prefixIcon: Icon(Icons.help_outline),
-                              ),
-                              validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-                            ),
                             const SizedBox(height: 16),
-                            const Text('Options', style: TextStyle(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
+                            _buildAuraTextField(
+                              controller: question.controller,
+                              label: 'QUESTION TEXT',
+                              icon: Icons.help_outline,
+                              goldColor: goldColor,
+                            ),
+                            const SizedBox(height: 24),
+                            Text('OPTIONS', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1, color: Colors.white54)),
+                            const SizedBox(height: 12),
                             ...question.options.asMap().entries.map((optEntry) {
                               final optIndex = optEntry.key;
                               final optController = optEntry.value;
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
+                                padding: const EdgeInsets.only(bottom: 12.0),
                                 child: Row(
                                   children: [
                                     Expanded(
-                                      child: TextFormField(
+                                      child: _buildAuraTextField(
                                         controller: optController,
-                                        decoration: InputDecoration(
-                                          labelText: 'Option ${optIndex + 1}',
-                                          isDense: true,
-                                        ),
-                                        validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                                        label: 'OPTION ${optIndex + 1}',
+                                        goldColor: goldColor,
                                       ),
                                     ),
                                     if (question.options.length > 2)
                                       IconButton(
-                                        icon: const Icon(Icons.close, size: 20),
+                                        icon: const Icon(Icons.close, size: 20, color: Colors.white54),
                                         onPressed: () => _removeOption(index, optIndex),
                                       ),
                                   ],
@@ -278,8 +291,8 @@ class _AdminCreateSurveyPageState extends ConsumerState<AdminCreateSurveyPage> {
                             }).toList(),
                             TextButton.icon(
                               onPressed: () => _addOption(index),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Add Option'),
+                              icon: Icon(Icons.add, color: goldColor),
+                              label: Text('Add Option', style: GoogleFonts.montserrat(color: goldColor, fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
@@ -289,19 +302,30 @@ class _AdminCreateSurveyPageState extends ConsumerState<AdminCreateSurveyPage> {
                   
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: charcoal,
+                      foregroundColor: goldColor,
+                      side: BorderSide(color: goldColor.withOpacity(0.5)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                     onPressed: _addQuestion,
-                    icon: const Icon(Icons.add_box),
-                    label: const Text('Add Another Question'),
+                    icon: Icon(Icons.add_box, color: goldColor),
+                    label: Text('Add Another Question', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
                   ),
                   
                   const SizedBox(height: 24),
                   
-                  GlowingButton(
+                  ElevatedButton(
                     onPressed: _isLoading ? () {} : _submit,
-                    child: Text(_isLoading ? 'Creating...' : 'Create Group Survey'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: goldColor,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: _isLoading
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                      : Text('Publish Mission', style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                   
                   const SizedBox(height: 40),
@@ -311,6 +335,47 @@ class _AdminCreateSurveyPageState extends ConsumerState<AdminCreateSurveyPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAuraTextField({
+    required TextEditingController controller,
+    required String label,
+    IconData? icon,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    required Color goldColor,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      style: GoogleFonts.montserrat(color: Colors.white, fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.montserrat(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+        prefixIcon: icon != null ? Icon(icon, color: Colors.white54) : null,
+        filled: true,
+        fillColor: const Color(0xFF131313),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: goldColor, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Required';
+        if (label == 'REWARD POINTS' && int.tryParse(value) == null) return 'Must be a number';
+        return null;
+      },
     );
   }
 }

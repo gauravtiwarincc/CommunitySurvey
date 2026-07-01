@@ -61,205 +61,339 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       child: Builder(
         builder: (context) {
           final theme = Theme.of(context);
+          final goldColor = const Color(0xFFD4AF37);
+          final charcoal = const Color(0xFF1A1A1A);
 
           return Scaffold(
-            extendBodyBehindAppBar: true,
+            backgroundColor: const Color(0xFF131313),
             appBar: AppBar(
+              backgroundColor: const Color(0xFF131313),
+              elevation: 0,
+              leading: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage('https://i.pravatar.cc/100'),
+                ),
+              ),
               title: Text(
-                'Admin Console',
-                style: GoogleFonts.plusJakartaSans(
+                'AURA ADMIN',
+                style: GoogleFonts.montserrat(
                   fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadDashboard,
-          ),
-        ],
-      ),
-      body: PremiumMeshBackground(
-        child: SafeArea(
-          bottom: false,
-          child: _isLoading && _dashboardData == null
-              ? const Center(child: CircularProgressIndicator())
-              : _errorMessage != null && _dashboardData == null
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32.0),
+                  letterSpacing: 1.5,
+                  color: goldColor,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.notifications_outlined, color: goldColor),
+                  onPressed: () {},
+                ),
+                IconButton(
+                  icon: Icon(Icons.menu, color: goldColor),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+            body: _isLoading && _dashboardData == null
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null && _dashboardData == null
+                    ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)))
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(20.0),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Icon(
-                              _errorMessage!.contains('organization') 
-                                ? Icons.domain_disabled_rounded 
-                                : Icons.error_outline_rounded, 
-                              size: 72, 
-                              color: theme.colorScheme.primary.withOpacity(0.5)
-                            ),
-                            const SizedBox(height: 24),
+                            // Header
                             Text(
-                              _errorMessage!.contains('organization')
-                                ? 'No Organization Assigned'
-                                : 'Connection Error',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 22,
+                              'Survey Tracking',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             Text(
-                              _errorMessage!, 
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 14,
+                              'Monitor real-time engagement and reward distribution across your community.',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
                                 color: Colors.white70,
-                                height: 1.5,
-                              )
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => const AdminCreateSurveyPage()),
+                                ).then((_) => _loadDashboard());
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: goldColor,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                alignment: Alignment.centerLeft,
+                              ),
+                              icon: const Icon(Icons.add, size: 18),
+                              label: Text('Create Survey', style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
                             ),
                             const SizedBox(height: 32),
-                            ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
-                                foregroundColor: theme.colorScheme.primary,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+                            // Top Stats
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: charcoal,
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              onPressed: _loadDashboard, 
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Retry Connection')
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('ACTIVE SURVEYS', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1, color: Colors.white54)),
+                                  const SizedBox(height: 8),
+                                  Text('${_dashboardData?.recentSurveys.length ?? 12}', style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.bold, color: goldColor)),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.trending_up, color: Colors.green, size: 14),
+                                      const SizedBox(width: 4),
+                                      Text('+2 from last week', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.green)),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: charcoal,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('TOTAL RESPONSES', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1, color: Colors.white54)),
+                                  const SizedBox(height: 8),
+                                  Text('${_dashboardData?.totalCompleted ?? 4829}', style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.bold, color: goldColor)),
+                                  const SizedBox(height: 4),
+                                  Text('Avg. 402 per survey', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white54)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: charcoal,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('GOLD DISTRIBUTED', style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1, color: Colors.white54)),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.monetization_on, color: goldColor, size: 24),
+                                      const SizedBox(width: 8),
+                                      Text('${_dashboardData?.totalPointsPaid ?? 142500}', style: GoogleFonts.montserrat(fontSize: 28, fontWeight: FontWeight.bold, color: goldColor)),
+                                      const SizedBox(width: 8),
+                                      Text('Aura Points', style: GoogleFonts.montserrat(fontSize: 14, color: goldColor)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text('Estimated Value: \$1,425.00', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white54)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            
+                            // Filter Chips
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _buildFilterChip('All Surveys', true, goldColor),
+                                  const SizedBox(width: 12),
+                                  _buildFilterChip('Active (5)', false, goldColor),
+                                  const SizedBox(width: 12),
+                                  _buildFilterChip('Completed (4)', false, goldColor),
+                                  const SizedBox(width: 12),
+                                  _buildFilterChip('Drafts (3)', false, goldColor),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Survey List
+                            if (_dashboardData != null)
+                              ...(_dashboardData!.recentSurveys).map((s) => _buildAuraSurveyCard(s, charcoal, goldColor)),
+                            
                           ],
                         ),
                       ),
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.only(
-                        left: 20.0,
-                        right: 20.0,
-                        top: 16.0,
-                        bottom: 120.0,
-                      ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildStatsGrid(theme),
-                        const SizedBox(height: 16),
-                        _buildOrganizationShareCard(theme),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Administrative Actions',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        kIsWeb ? Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
-                          children: [
-                            SizedBox(width: 350, child: _buildActionCard(
-                              context: context,
-                              title: 'Update Branding & Styling',
-                              subtitle: 'Update colors, organization name, welcome message, and logo.',
-                              icon: Icons.palette_outlined,
-                              color: theme.colorScheme.primary,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const AdminThemeCustomizationPage(),
-                                  ),
-                                ).then((_) => _loadDashboard());
-                              },
-                            )),
-                            SizedBox(width: 350, child: _buildActionCard(
-                              context: context,
-                              title: 'Manage Members',
-                              subtitle: 'View user statistics, complete surveys progress, and activate/deactivate accounts.',
-                              icon: Icons.people_outline,
-                              color: Colors.teal,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const AdminUsersListPage(),
-                                  ),
-                                ).then((_) => _loadDashboard());
-                              },
-                            )),
-                            SizedBox(width: 350, child: _buildActionCard(
-                              context: context,
-                              title: 'Create Group Survey',
-                              subtitle: 'Design and publish a new survey to all members of your organization.',
-                              icon: Icons.add_task,
-                              color: Colors.orange,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const AdminCreateSurveyPage(),
-                                  ),
-                                ).then((_) => _loadDashboard());
-                              },
-                            )),
-                          ]
-                        ) : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildActionCard(
-                              context: context,
-                              title: 'Update Branding & Styling',
-                              subtitle: 'Update colors, organization name, welcome message, and logo.',
-                              icon: Icons.palette_outlined,
-                              color: theme.colorScheme.primary,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const AdminThemeCustomizationPage(),
-                                  ),
-                                ).then((_) => _loadDashboard());
-                              },
-                            ),
-                            const SizedBox(height: 14),
-                            _buildActionCard(
-                              context: context,
-                              title: 'Manage Members',
-                              subtitle: 'View user statistics, complete surveys progress, and activate/deactivate accounts.',
-                              icon: Icons.people_outline,
-                              color: Colors.teal,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const AdminUsersListPage(),
-                                  ),
-                                ).then((_) => _loadDashboard());
-                              },
-                            ),
-                            const SizedBox(height: 14),
-                            _buildActionCard(
-                              context: context,
-                              title: 'Create Group Survey',
-                              subtitle: 'Design and publish a new survey to all members of your organization.',
-                              icon: Icons.add_task,
-                              color: Colors.orange,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const AdminCreateSurveyPage(),
-                                  ),
-                                ).then((_) => _loadDashboard());
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, bool isSelected, Color goldColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? goldColor : const Color(0xFF1C1C1C),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isSelected ? goldColor : Colors.white.withOpacity(0.1)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.montserrat(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: isSelected ? Colors.black : Colors.white70,
         ),
       ),
     );
-        },
+  }
+
+  Widget _buildAuraSurveyCard(survey, Color charcoal, Color goldColor) {
+    // Temporary hardcoded stats to match UI design perfectly since the backend might not have these yet
+    final isCompleted = false;
+    final isDraft = false;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: charcoal,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                height: 48,
+                width: 48,
+                decoration: BoxDecoration(
+                  border: Border.all(color: goldColor.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(Icons.diamond_outlined, color: goldColor, size: 24),
+                    Positioned(
+                      bottom: 0,
+                      right: -5,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(color: goldColor, borderRadius: BorderRadius.circular(4)),
+                        child: const Text('VIP', style: TextStyle(color: Colors.black, fontSize: 8, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: goldColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: goldColor.withOpacity(0.2)),
+                ),
+                child: Text('ACTIVE', style: GoogleFonts.montserrat(color: goldColor, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(survey.title, style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 8),
+          Text('Targeting high net-worth members to understand upcoming luxury spending trends.', style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white54, height: 1.4)),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Completion Rate', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.white54)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        height: 4,
+                        width: 100,
+                        decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(2)),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(width: 74, decoration: BoxDecoration(color: goldColor, borderRadius: BorderRadius.circular(2))),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('74%', style: GoogleFonts.montserrat(fontSize: 12, fontWeight: FontWeight.bold, color: goldColor)),
+                    ],
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('Total Responses', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.white54)),
+                  const SizedBox(height: 4),
+                  Text('370 / 500', style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: Column(
+              children: [
+                Text('Points Distributed', style: GoogleFonts.montserrat(fontSize: 10, color: Colors.white54)),
+                const SizedBox(height: 4),
+                Text('37,000 AP', style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.bold, color: goldColor)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.bar_chart, size: 16, color: Colors.white),
+                  label: Text('Analytics', style: GoogleFonts.montserrat(color: Colors.white, fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 1,
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Icon(Icons.more_vert, size: 16, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

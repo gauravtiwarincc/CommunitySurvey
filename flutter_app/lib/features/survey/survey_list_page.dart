@@ -80,8 +80,9 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
       appBar: AppBar(
         title: Text(
           'Surveys',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.montserrat(
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
         bottom: PreferredSize(
@@ -89,7 +90,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white.withOpacity(0.06)),
             ),
@@ -97,11 +98,13 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
               controller: _tabController,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white38,
+              labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13),
+              unselectedLabelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 13),
               indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
-                color: activeColor.withOpacity(0.15),
+                color: const Color(0xFF382A3A),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: activeColor.withOpacity(0.2)),
+                border: Border.all(color: const Color(0xFF4C364E)),
               ),
               dividerColor: Colors.transparent,
               tabs: const [
@@ -228,24 +231,27 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
       children: [
         Text(
           title,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.montserrat(
             fontSize: 16,
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
+            color: const Color(0xFF2D1E3A),
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFF4C364E)),
           ),
           child: Text(
             '$count',
-            style: TextStyle(
-              color: theme.colorScheme.primary,
+            style: GoogleFonts.montserrat(
+              color: const Color(0xFF8C52FF),
               fontWeight: FontWeight.bold,
-              fontSize: 11,
+              fontSize: 12,
             ),
           ),
         ),
@@ -256,19 +262,26 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
   Widget _buildSurveyCard(Survey survey, bool isCompleted, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: GlassCard(
-        padding: const EdgeInsets.all(16.0),
-        child: InkWell(
-          onTap: isCompleted
-              ? null
-              : () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => SurveyDetailsPage(surveyId: survey.id),
-                    ),
-                  ).then((_) => _loadSurveys());
-                },
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: isCompleted
+            ? null
+            : () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => SurveyDetailsPage(surveyId: survey.id),
+                  ),
+                ).then((_) => _loadSurveys());
+              },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
@@ -276,25 +289,27 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
                   children: [
                     Text(
                       survey.title,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.montserrat(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                     if (survey.description != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
                         survey.description!,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          
+                        style: GoogleFonts.montserrat(
+                          color: Colors.white54,
                           fontSize: 12,
+                          height: 1.4,
                         ),
                       ),
                     ],
                     if (!isCompleted && survey.expiresAt != null) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       SurveyTimerWidget(expiresAt: survey.expiresAt!, compact: true),
                     ],
                   ],
@@ -303,28 +318,29 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> with SingleTick
               const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: isCompleted ? Colors.green.withOpacity(0.08) : theme.colorScheme.primary.withOpacity(0.08),
+                      color: isCompleted ? Colors.green.withOpacity(0.1) : const Color(0xFF2D1E3A),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isCompleted ? Colors.green.withOpacity(0.2) : theme.colorScheme.primary.withOpacity(0.2),
+                        color: isCompleted ? Colors.green.withOpacity(0.3) : const Color(0xFF4C364E),
                       ),
                     ),
                     child: Text(
                       isCompleted ? 'Completed' : '+${survey.rewardPoints} PTS',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: isCompleted ? Colors.green : theme.colorScheme.primary,
+                      style: GoogleFonts.montserrat(
+                        color: isCompleted ? Colors.green : const Color(0xFF8C52FF),
                         fontWeight: FontWeight.bold,
-                        fontSize: 11,
+                        fontSize: 10,
                       ),
                     ),
                   ),
                   if (!isCompleted) ...[
-                    const SizedBox(height: 10),
-                    const Icon(Icons.arrow_forward_ios, size: 12),
+                    const SizedBox(height: 16),
+                    const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white54),
                   ],
                 ],
               ),

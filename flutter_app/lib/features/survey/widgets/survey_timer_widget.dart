@@ -80,9 +80,9 @@ class _SurveyTimerWidgetState extends State<SurveyTimerWidget> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isExpired ? Colors.red.shade50 : Colors.amber.shade50,
+          color: isExpired ? Colors.red.shade50 : const Color(0xFFFFF4D9), // Light yellow pill
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isExpired ? Colors.red.shade200 : Colors.amber.shade200),
+          border: Border.all(color: isExpired ? Colors.red.shade200 : Colors.transparent),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -90,7 +90,7 @@ class _SurveyTimerWidgetState extends State<SurveyTimerWidget> {
             Icon(
               Icons.timer_outlined,
               size: 13,
-              color: isExpired ? Colors.red.shade700 : Colors.amber.shade800,
+              color: isExpired ? Colors.red.shade700 : const Color(0xFFD49E00), // Dark yellow/orange
             ),
             const SizedBox(width: 4),
             Text(
@@ -98,7 +98,7 @@ class _SurveyTimerWidgetState extends State<SurveyTimerWidget> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: isExpired ? Colors.red.shade700 : Colors.amber.shade800,
+                color: isExpired ? Colors.red.shade700 : const Color(0xFFD49E00),
               ),
             ),
           ],

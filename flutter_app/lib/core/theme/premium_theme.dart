@@ -12,8 +12,8 @@ class PremiumTheme {
     const primaryGold = Color(0xFFC57D3E);
     const secondaryDark = Color(0xFF393A48);
     const accentYellow = Color(0xFFFACC15);
-    const bgColor = Color(0xFF000000); // Pure Black
-    const surfaceColor = Color(0xFF0A0A0A); // Onyx
+    const bgColor = Color(0xFF25201D); // Dark Sepia Charcoal
+    const surfaceColor = Color(0xFF2D2622); // Slightly lighter for elevation
     final borderColor = Colors.white.withOpacity(0.04);
 
     return _buildCoreTheme(primaryGold, secondaryDark, accentYellow, bgColor, surfaceColor, borderColor);
@@ -29,9 +29,9 @@ class PremiumTheme {
     final sec = secondary ?? glowCharcoal;
     final acc = accent ?? glowBronze;
 
-    const bgColor = Color(0xFF000000); // Pure Black
-    const surfaceColor = Color(0xFF0A0A0A); // Onyx
-    final borderColor = Colors.white.withOpacity(0.08);
+    const bgColor = Color(0xFF25201D); // Dark Sepia Charcoal
+    const surfaceColor = Color(0xFF2D2622); // Slightly lighter for elevation
+    final borderColor = Colors.white.withOpacity(0.06);
 
     return _buildCoreTheme(seed, sec, acc, bgColor, surfaceColor, borderColor);
   }
@@ -42,8 +42,8 @@ class PremiumTheme {
     const textSmallColor = Colors.white54;
     final hintColor = Colors.white30;
     
-    final inputFill = const Color(0xFF111111); // Dark charcoal input
-    final inputBorder = Colors.transparent;
+    final inputFill = const Color(0xFF111111); // Dark input
+    final inputBorder = Colors.white.withOpacity(0.05);
 
     return ThemeData(
       useMaterial3: true,
@@ -58,13 +58,13 @@ class PremiumTheme {
         surface: surfaceColor,
         background: bgColor,
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
-        titleLarge: GoogleFonts.poppins(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.bold)),
-        titleMedium: GoogleFonts.poppins(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.bold)),
-        titleSmall: GoogleFonts.poppins(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.w600)),
-        bodyLarge: GoogleFonts.inter(textStyle: const TextStyle(color: textHeadingColor)),
-        bodyMedium: GoogleFonts.inter(textStyle: const TextStyle(color: textBodyColor)),
-        bodySmall: GoogleFonts.inter(textStyle: const TextStyle(color: textSmallColor)),
+      textTheme: GoogleFonts.montserratTextTheme(ThemeData.dark().textTheme).copyWith(
+        titleLarge: GoogleFonts.montserrat(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.bold)),
+        titleMedium: GoogleFonts.montserrat(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.bold)),
+        titleSmall: GoogleFonts.montserrat(textStyle: const TextStyle(color: textHeadingColor, fontWeight: FontWeight.w600)),
+        bodyLarge: GoogleFonts.montserrat(textStyle: const TextStyle(color: textHeadingColor)),
+        bodyMedium: GoogleFonts.montserrat(textStyle: const TextStyle(color: textBodyColor)),
+        bodySmall: GoogleFonts.montserrat(textStyle: const TextStyle(color: textSmallColor)),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -84,27 +84,27 @@ class PremiumTheme {
         fillColor: inputFill,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8), // Aura Spec: 8px
           borderSide: BorderSide(color: inputBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: inputBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: seed.withOpacity(0.5), width: 1.0),
         ),
-        labelStyle: GoogleFonts.inter(color: textSmallColor, fontSize: 14),
-        hintStyle: GoogleFonts.inter(color: hintColor, fontSize: 14),
+        labelStyle: GoogleFonts.montserrat(color: textSmallColor, fontSize: 14),
+        hintStyle: GoogleFonts.montserrat(color: hintColor, fontSize: 14),
       ),
       cardTheme: CardThemeData(
         color: surfaceColor,
         elevation: 0, 
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: borderColor),
+          borderRadius: BorderRadius.circular(8), // Aura Spec: 8px
+          side: BorderSide(color: borderColor, width: 1),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -143,87 +143,9 @@ class PremiumMeshBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = orgPrimary ?? PremiumTheme.glowGold;
-    final secondary = orgSecondary ?? PremiumTheme.glowBronze;
-    
-    return Stack(
-      children: [
-        // Solid base
-        Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
-        ),
-        // Glow Orb Top Left
-        Positioned(
-          top: -150,
-          left: -100,
-          child: Container(
-            width: 450,
-            height: 450,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: primary.withOpacity(0.20), // Stronger gold glow
-            ),
-          ),
-        ),
-        // Glow Orb Top Right (Added for more glow)
-        Positioned(
-          top: -50,
-          right: -100,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: primary.withOpacity(0.15), // Stronger gold glow
-            ),
-          ),
-        ),
-        // Glow Orb Bottom Right
-        Positioned(
-          bottom: -150,
-          right: -50,
-          child: Container(
-            width: 500,
-            height: 500,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: secondary.withOpacity(0.15), // Stronger charcoal/bronze glow
-            ),
-          ),
-        ),
-        // Light Rays from bottom effect (Liquid Glass Enhancement)
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 400,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  primary.withOpacity(0.20), // Stronger bottom light ray
-                  primary.withOpacity(0.05),
-                  Colors.transparent,
-                ],
-                stops: const [0.0, 0.5, 1.0],
-              ),
-            ),
-          ),
-        ),
-        // Heavy Blur layer to create the mesh effect
-        Positioned.fill(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-            child: Container(
-              color: Colors.transparent,
-            ),
-          ),
-        ),
-        // Content on top
-        Positioned.fill(child: SafeArea(bottom: false, child: child)),
-      ],
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(bottom: false, child: child),
     );
   }
 }

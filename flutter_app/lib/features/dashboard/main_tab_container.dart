@@ -8,6 +8,7 @@ import 'package:community_survey/features/survey/survey_list_page.dart';
 import 'package:community_survey/features/profile/profile_page.dart';
 import 'package:community_survey/features/admin/admin_dashboard_page.dart';
 import 'package:community_survey/features/context/context_provider.dart';
+import 'package:community_survey/features/rewards/redeem_rewards_page.dart';
 
 class TabItem {
   final IconData icon;
@@ -45,22 +46,28 @@ class _MainTabContainerState extends ConsumerState<MainTabContainer> {
     final isAdmin = userRole == UserRole.admin || userRole == UserRole.superAdmin;
 
     final List<Widget> pages = [
-      const DashboardPage(),
+      const DashboardPage(), // Will just render DiscoverFeedView
       const SurveyListPage(),
+      const RedeemRewardsPage(),
       const ProfilePage(),
       if (isAdmin) const AdminDashboardPage(),
     ];
 
     final List<TabItem> items = [
       const TabItem(
-        icon: Icons.dashboard_outlined,
-        activeIcon: Icons.dashboard,
-        label: 'Dashboard',
+        icon: Icons.explore_outlined,
+        activeIcon: Icons.explore,
+        label: 'Discover',
       ),
       const TabItem(
         icon: Icons.assignment_outlined,
         activeIcon: Icons.assignment,
         label: 'Surveys',
+      ),
+      const TabItem(
+        icon: Icons.workspace_premium_outlined,
+        activeIcon: Icons.workspace_premium,
+        label: 'Rewards',
       ),
       const TabItem(
         icon: Icons.person_outline,

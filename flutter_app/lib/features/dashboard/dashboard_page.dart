@@ -37,7 +37,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   bool _isLoading = false;
   SurveyDashboardResponse? _dashboardData;
   String? _errorMessage;
-  SwiggyTabMode _currentTab = SwiggyTabMode.surveys;
+  SwiggyTabMode _currentTab = SwiggyTabMode.discover;
 
   @override
   void initState() {
@@ -99,13 +99,63 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           bottom: false,
           child: Column(
             children: [
-
-            
-
-            // The Swiggy Tab Bar
-            SwiggyTabBar(
-              selectedMode: _currentTab,
-              onTabChanged: (mode) => setState(() => _currentTab = mode),
+            // The Top App Bar
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0, left: 24.0, right: 24.0, bottom: 24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: theme.colorScheme.primary.withOpacity(0.5), width: 1.5),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Color(0xFF1E1E1E),
+                          child: Icon(Icons.person, color: Colors.white54, size: 20),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                contextState.activeContext?.displayName ?? 'Community Profile',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: theme.colorScheme.primary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(Icons.keyboard_arrow_down, color: theme.colorScheme.primary, size: 16),
+                            ],
+                          ),
+                          Text(
+                            'Community Vault',
+                            style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    child: Icon(Icons.notifications_none, color: theme.colorScheme.primary, size: 20),
+                  ),
+                ],
+              ),
             ),
 
             // The Tab Views
@@ -144,6 +194,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         ),
       ),
     ), // Close PremiumMeshBackground
+
     ); // Close Scaffold
   }
 
